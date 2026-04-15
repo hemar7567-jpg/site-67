@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Создание Анимации в 3DS Max</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --cream:#faf8f3;--cream2:#f3efe5;--cream3:#ece6d8;
+  --ink:#1a1610;--ink2:#3d3628;--ink3:#7a6e5c;
+  --gold:#c8933a;--gold2:#e8b460;--rust:#c4522a;
+  --sage:#5a7a5e;--sky:#3a6b8a;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--cream);color:var(--ink);font-family:'DM Sans',sans-serif;overflow-x:hidden;cursor:none;}
+
+/* CUSTOM CURSOR */
+#cur{position:fixed;width:10px;height:10px;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .08s,background .2s;}
+#cur2{position:fixed;width:36px;height:36px;border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:left .1s ease,top .1s ease,transform .2s,border .2s;}
+body.cur-light #cur{background:#fff;}
+body.cur-light #cur2{border:1.5px solid rgba(255,255,255,.6);}
+body.cur-dark #cur{background:var(--rust);}
+body.cur-dark #cur2{border:1px solid rgba(196,82,42,.4);}
+body.cur-light:has(a:hover) #cur2,body.cur-light:has(button:hover) #cur2{transform:translate(-50%,-50%) scale(2.2);}
+body.cur-dark:has(a:hover) #cur2,body.cur-dark:has(button:hover) #cur2{transform:translate(-50%,-50%) scale(2.2);}
+
+/* PROGRESS BAR */
+#progress{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--rust),var(--gold2));z-index:300;transition:width .1s;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:0 60px;height:72px;display:flex;align-items:center;justify-content:space-between;transition:background .4s,box-shadow .4s;}
+nav.scrolled{background:rgba(250,248,243,.95);backdrop-filter:blur(12px);box-shadow:0 1px 0 rgba(26,22,16,.08);}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;letter-spacing:1px;color:var(--ink);}
+.nav-logo span{color:var(--rust);}
+.nav-links{display:flex;gap:40px;}
+.nav-links a{font-size:12px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:var(--ink3);text-decoration:none;transition:color .2s;}
+.nav-links a:hover{color:var(--ink);}
+.nav-btn{font-size:11px;font-weight:500;letter-spacing:2px;text-transform:uppercase;padding:11px 24px;background:var(--ink);color:var(--cream);border:none;cursor:none;transition:background .2s;}
+.nav-btn:hover{background:var(--rust);}
+
+/* HERO */
+#hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;position:relative;overflow:hidden;}
+.hero-left{display:flex;flex-direction:column;justify-content:flex-end;padding:120px 60px 80px;position:relative;z-index:2;background:var(--cream);}
+.hero-tag{font-size:10px;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--rust);margin-bottom:32px;display:flex;align-items:center;gap:12px;opacity:0;transform:translateX(-20px);animation:fadeSlideIn .8s .3s forwards;}
+.hero-tag::before{content:'';width:32px;height:1px;background:var(--rust);}
+.hero-h1{font-family:'Cormorant Garamond',serif;font-size:clamp(54px,6vw,88px);font-weight:300;line-height:1;letter-spacing:-1px;color:var(--ink);opacity:0;animation:fadeSlideIn .9s .5s forwards;}
+.hero-h1 strong{font-weight:700;display:block;}
+.hero-h1 em{font-style:italic;color:var(--rust);}
+.hero-sub{font-size:15px;font-weight:300;line-height:1.75;color:var(--ink3);max-width:420px;margin-top:28px;opacity:0;animation:fadeSlideIn .8s .7s forwards;}
+.hero-actions{display:flex;align-items:center;gap:28px;margin-top:48px;opacity:0;animation:fadeSlideIn .8s .9s forwards;}
+.btn-main{padding:16px 38px;background:var(--rust);color:#fff;font-size:11px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;border:none;cursor:none;transition:background .2s,transform .15s;}
+.btn-main:hover{background:var(--ink);transform:translateY(-2px);}
+.btn-link{font-size:11px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--ink3);text-decoration:none;display:flex;align-items:center;gap:8px;transition:color .2s,gap .2s;}
+.btn-link:hover{color:var(--ink);gap:14px;}
+.hero-right{position:relative;background:var(--cream2);overflow:hidden;}
+#heroCanvas{width:100%;height:100%;display:block;position:absolute;inset:0;}
+.hero-right-label{position:absolute;bottom:40px;right:40px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--ink3);writing-mode:vertical-rl;z-index:2;}
+.hero-scroll{position:absolute;bottom:40px;left:60px;display:flex;align-items:center;gap:12px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--ink3);z-index:3;opacity:0;animation:fadeSlideIn .8s 1.2s forwards;}
+.scroll-bar{width:40px;height:1px;background:var(--ink3);position:relative;overflow:hidden;}
+.scroll-bar::after{content:'';position:absolute;inset:0;background:var(--rust);transform:translateX(-100%);animation:scrollBar 2.5s ease-in-out infinite;}
+@keyframes scrollBar{0%{transform:translateX(-100%);}50%{transform:translateX(0);}100%{transform:translateX(100%);}}
+@keyframes fadeSlideIn{to{opacity:1;transform:none;}}
+.hero-stats{position:absolute;right:0;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;z-index:3;}
+.hstat{padding:20px 28px;background:rgba(250,248,243,.9);border-left:2px solid var(--cream3);text-align:right;}
+.hstat-n{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:700;color:var(--ink);line-height:1;}
+.hstat-l{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ink3);margin-top:4px;}
+
+/* ══════════════════════════
+   SCROLL-DRIVEN ANIMATIONS (Kubrick-style)
+══════════════════════════ */
+.scroll-scene{position:relative;overflow:hidden;}
+.pin-wrap{position:sticky;top:0;height:100vh;overflow:hidden;}
+.parallax-text{will-change:transform;}
+.char-split span{display:inline-block;overflow:hidden;}
+.char-split span i{display:inline-block;font-style:normal;}
+
+/* Horizontal scroll track */
+.h-scroll-outer{overflow:hidden;position:relative;}
+.h-scroll-track{display:flex;will-change:transform;}
+.h-scroll-item{flex-shrink:0;}
+
+/* Big number counter */
+.big-number{font-family:'Cormorant Garamond',serif;font-size:clamp(80px,12vw,180px);font-weight:700;line-height:1;letter-spacing:-4px;}
+
+/* Clip reveal */
+.clip-reveal{clip-path:inset(0 100% 0 0);transition:clip-path 1.1s cubic-bezier(.16,1,.3,1);}
+.clip-reveal.in{clip-path:inset(0 0% 0 0);}
+
+/* Line wipe */
+.line-wipe{overflow:hidden;}
+.line-wipe-inner{transform:translateY(110%);transition:transform 1s cubic-bezier(.16,1,.3,1);}
+.line-wipe.in .line-wipe-inner{transform:translateY(0);}
+
+/* Section that pins */
+.sticky-section{height:300vh;position:relative;}
+.sticky-inner{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+
+/* Marquee */
+.marquee-outer{overflow:hidden;white-space:nowrap;padding:20px 0;}
+.marquee-track{display:inline-flex;gap:60px;animation:marquee 18s linear infinite;}
+@keyframes marquee{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+.marquee-item{font-family:'Cormorant Garamond',serif;font-size:clamp(36px,5vw,72px);font-weight:300;font-style:italic;color:var(--ink2);opacity:.25;letter-spacing:-1px;}
+
+/* Teapot section */
+#teapot-section{background:var(--ink);padding:0;position:relative;overflow:hidden;min-height:100vh;display:flex;align-items:center;}
+.teapot-bg-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(200,147,58,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(200,147,58,.05) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;}
+.teapot-content{display:grid;grid-template-columns:1fr 1fr;width:100%;min-height:100vh;}
+.teapot-left{padding:80px 60px;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2;}
+.teapot-badge{font-size:10px;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--gold2);margin-bottom:24px;display:flex;align-items:center;gap:10px;}
+.teapot-badge::before{content:'';width:24px;height:1px;background:var(--gold2);}
+.teapot-h{font-family:'Cormorant Garamond',serif;font-size:clamp(42px,4.5vw,68px);font-weight:300;line-height:1.05;color:var(--cream);letter-spacing:-.5px;}
+.teapot-h strong{font-weight:700;color:var(--gold2);display:block;}
+.teapot-desc{font-size:14px;font-weight:300;line-height:1.8;color:rgba(250,248,243,.55);max-width:420px;margin-top:24px;}
+.teapot-steps{display:flex;flex-direction:column;gap:0;margin-top:40px;}
+.tstep{display:flex;align-items:flex-start;gap:20px;padding:16px 0;border-bottom:1px solid rgba(250,248,243,.06);}
+.tstep:last-child{border-bottom:none;}
+.tstep-n{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:rgba(232,180,96,.25);line-height:1;flex-shrink:0;width:36px;}
+.tstep-body .tstep-t{font-size:13px;font-weight:500;color:var(--cream);margin-bottom:4px;}
+.tstep-body .tstep-d{font-size:12px;font-weight:300;color:rgba(250,248,243,.4);line-height:1.6;}
+.teapot-right{position:relative;display:flex;align-items:center;justify-content:center;}
+#teapotCanvas{width:100%;height:100%;min-height:600px;display:block;}
+.teapot-controls{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:90%;}
+.tctl-btn{padding:9px 16px;background:rgba(250,248,243,.08);border:1px solid rgba(250,248,243,.15);color:rgba(250,248,243,.7);font-size:10px;letter-spacing:1.8px;text-transform:uppercase;cursor:none;transition:all .2s;font-family:'DM Sans',sans-serif;}
+.tctl-btn:hover,.tctl-btn.active{background:rgba(200,147,58,.2);border-color:var(--gold);color:var(--gold2);}
+.teapot-label{position:absolute;top:40px;right:40px;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(250,248,243,.3);writing-mode:vertical-rl;}
+
+/* INTRO BAND */
+.intro-band{background:var(--ink);padding:72px 60px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:60px;}
+.iband-item{border-left:1px solid rgba(250,248,243,.1);padding-left:32px;}
+.iband-num{font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:300;color:var(--gold2);line-height:1;}
+.iband-title{font-size:14px;font-weight:500;color:var(--cream);margin:10px 0 8px;letter-spacing:.5px;}
+.iband-text{font-size:13px;font-weight:300;color:rgba(250,248,243,.45);line-height:1.65;}
+
+/* WHAT IS */
+#what{padding:140px 60px;background:var(--cream);position:relative;}
+.what-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:340px 1fr;gap:100px;align-items:start;}
+.what-label{font-size:10px;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--rust);margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+.what-label::before{content:'';width:24px;height:1px;background:var(--rust);}
+.what-sticky{position:sticky;top:120px;}
+.what-title{font-family:'Cormorant Garamond',serif;font-size:clamp(38px,4vw,56px);font-weight:300;line-height:1.05;letter-spacing:-.5px;}
+.what-title strong{font-weight:700;}
+.what-deco{width:48px;height:2px;background:linear-gradient(90deg,var(--rust),var(--gold2));margin-top:28px;}
+.what-content{padding-top:8px;}
+.what-lead{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;font-style:italic;line-height:1.55;color:var(--ink2);margin-bottom:32px;padding-bottom:32px;border-bottom:1px solid var(--cream3);}
+.what-body p{font-size:15px;font-weight:300;line-height:1.8;color:var(--ink3);margin-bottom:20px;}
+.what-body p strong{color:var(--ink);font-weight:500;}
+.what-tags{display:flex;flex-wrap:wrap;gap:10px;margin-top:36px;}
+.wtag{padding:8px 18px;border:1px solid var(--cream3);font-size:11px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink3);transition:all .2s;cursor:default;}
+.wtag:hover{border-color:var(--rust);color:var(--rust);}
+
+/* TIMELINE */
+#timeline{background:var(--cream2);padding:120px 60px;}
+.tl-inner{max-width:1280px;margin:0 auto;}
+.tl-header{display:grid;grid-template-columns:1fr 1fr;gap:80px;margin-bottom:80px;align-items:end;}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:clamp(38px,4vw,58px);font-weight:300;line-height:1.05;letter-spacing:-.5px;}
+.section-title strong{font-weight:700;}
+.tl-intro{font-size:15px;font-weight:300;line-height:1.75;color:var(--ink3);padding-top:10px;}
+.tl-steps{display:grid;grid-template-columns:repeat(5,1fr);position:relative;}
+.tl-steps::before{content:'';position:absolute;top:28px;left:28px;right:28px;height:1px;background:var(--cream3);z-index:0;}
+.tl-step{padding:0 20px 0 0;position:relative;z-index:1;}
+.tl-dot{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;transition:transform .3s,box-shadow .3s;}
+.tl-step:nth-child(1) .tl-dot{background:var(--rust);color:#fff;}
+.tl-step:nth-child(2) .tl-dot{background:var(--gold);color:#fff;}
+.tl-step:nth-child(3) .tl-dot{background:var(--sage);color:#fff;}
+.tl-step:nth-child(4) .tl-dot{background:var(--sky);color:#fff;}
+.tl-step:nth-child(5) .tl-dot{background:var(--ink);color:var(--cream);}
+.tl-step:hover .tl-dot{transform:scale(1.15);box-shadow:0 8px 24px rgba(0,0,0,.15);}
+.tl-step-title{font-size:14px;font-weight:500;margin:20px 0 8px;color:var(--ink);letter-spacing:.3px;}
+.tl-step-text{font-size:13px;font-weight:300;line-height:1.65;color:var(--ink3);}
+
+/* TECHNIQUES */
+#techniques{padding:140px 60px;background:var(--cream);}
+.tech-inner{max-width:1280px;margin:0 auto;}
+.tech-header{margin-bottom:72px;}
+.tech-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;}
+.tech-card{background:var(--cream2);padding:56px 52px;position:relative;overflow:hidden;transition:background .35s,transform .3s;}
+.tech-card:hover{background:var(--cream3);transform:translateY(-4px);}
+.tech-card::after{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--card-accent);transform:scaleY(0);transform-origin:bottom;transition:transform .4s cubic-bezier(.16,1,.3,1);}
+.tech-card:hover::after{transform:scaleY(1);}
+.tc1{--card-accent:var(--rust)}.tc2{--card-accent:var(--gold)}.tc3{--card-accent:var(--sage)}.tc4{--card-accent:var(--sky)}.tc5{--card-accent:var(--rust)}.tc6{--card-accent:var(--gold)}
+.tech-idx{font-family:'Cormorant Garamond',serif;font-size:72px;font-weight:700;position:absolute;top:28px;right:40px;line-height:1;color:rgba(26,22,16,.05);transition:color .3s;}
+.tech-card:hover .tech-idx{color:rgba(26,22,16,.09);}
+.tech-icon{margin-bottom:28px;}
+.tech-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;margin-bottom:14px;color:var(--ink);letter-spacing:-.3px;}
+.tech-desc{font-size:14px;font-weight:300;line-height:1.75;color:var(--ink3);}
+.tech-list{margin-top:20px;list-style:none;display:flex;flex-direction:column;gap:6px;}
+.tech-list li{font-size:12px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--ink3);padding-left:16px;position:relative;}
+.tech-list li::before{content:'—';position:absolute;left:0;color:var(--card-accent);}
+
+/* TOOLS */
+#tools{background:var(--ink);padding:120px 60px;}
+.tools-inner{max-width:1280px;margin:0 auto;}
+.tools-head{display:grid;grid-template-columns:1fr 1fr;gap:80px;margin-bottom:72px;align-items:end;}
+.tools-label{font-size:10px;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--gold2);margin-bottom:20px;display:flex;align-items:center;gap:10px;}
+.tools-label::before{content:'';width:24px;height:1px;background:var(--gold2);}
+.tools-title{font-family:'Cormorant Garamond',serif;font-size:clamp(38px,4vw,56px);font-weight:300;line-height:1.05;color:var(--cream);letter-spacing:-.5px;}
+.tools-title strong{font-weight:700;}
+.tools-sub{font-size:15px;font-weight:300;line-height:1.75;color:rgba(250,248,243,.45);padding-top:10px;}
+.tools-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(250,248,243,.06);}
+.tool-item{background:var(--ink);padding:36px 32px;transition:background .25s;}
+.tool-item:hover{background:#262010;}
+.tool-name{font-size:14px;font-weight:500;color:var(--cream);margin-bottom:6px;}
+.tool-role{font-size:11px;font-weight:300;letter-spacing:1.5px;text-transform:uppercase;color:rgba(250,248,243,.35);}
+.tool-dot{width:6px;height:6px;border-radius:50%;background:var(--gold2);margin-bottom:20px;opacity:.6;}
+
+/* RENDERERS */
+#renderers{padding:120px 60px;background:var(--cream2);}
+.rend-inner{max-width:1280px;margin:0 auto;}
+.rend-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:72px;}
+.rend-card{padding:44px 36px;border:1px solid var(--cream3);background:var(--cream);transition:transform .3s,box-shadow .3s,border-color .3s;}
+.rend-card:hover{transform:translateY(-8px);box-shadow:0 24px 60px rgba(26,22,16,.08);border-color:transparent;}
+.rend-num{font-family:'Cormorant Garamond',serif;font-size:56px;font-weight:700;line-height:1;margin-bottom:20px;}
+.rend-card:nth-child(1) .rend-num{color:var(--rust);}
+.rend-card:nth-child(2) .rend-num{color:var(--gold);}
+.rend-card:nth-child(3) .rend-num{color:var(--sky);}
+.rend-title{font-size:18px;font-weight:500;margin-bottom:12px;color:var(--ink);}
+.rend-desc{font-size:14px;font-weight:300;line-height:1.7;color:var(--ink3);}
+.rend-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;}
+.rtag{padding:5px 12px;background:var(--cream2);font-size:10px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink3);}
+
+/* TIPS */
+#tips{padding:120px 60px;background:var(--cream);}
+.tips-inner{max-width:1280px;margin:0 auto;}
+.tips-header{margin-bottom:72px;}
+.tip-row{display:grid;grid-template-columns:80px 1fr 2fr;gap:48px;align-items:start;padding:48px 0;border-bottom:1px solid var(--cream3);transition:background .2s,padding .2s;}
+.tip-row:last-child{border-bottom:none;}
+.tip-row:hover{background:rgba(243,239,229,.5);margin:0 -20px;padding-left:20px;padding-right:20px;}
+.tip-n{font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:700;color:var(--cream3);line-height:1;transition:color .3s;}
+.tip-row:hover .tip-n{color:var(--rust);}
+.tip-title{font-size:17px;font-weight:500;color:var(--ink);line-height:1.3;padding-top:6px;}
+.tip-text{font-size:14px;font-weight:300;line-height:1.75;color:var(--ink3);}
+
+/* QUOTE */
+.quote-block{background:var(--rust);padding:100px 60px;text-align:center;position:relative;overflow:hidden;}
+.quote-block::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(255,255,255,.08) 0%,transparent 70%);}
+.quote-inner{max-width:800px;margin:0 auto;position:relative;}
+.quote-mark{font-family:'Cormorant Garamond',serif;font-size:120px;line-height:.5;color:rgba(255,255,255,.2);display:block;margin-bottom:20px;}
+.quote-text{font-family:'Cormorant Garamond',serif;font-size:clamp(24px,3vw,38px);font-weight:300;font-style:italic;line-height:1.45;color:#fff;margin-bottom:32px;}
+.quote-src{font-size:11px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.6);}
+
+/* GLOSSARY */
+#glossary{padding:120px 60px;background:var(--cream2);}
+.glos-inner{max-width:1280px;margin:0 auto;}
+.glos-header{margin-bottom:64px;}
+.glos-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--cream3);}
+.glos-item{background:var(--cream2);padding:32px 28px;transition:background .2s;}
+.glos-item:hover{background:var(--cream);}
+.glos-term{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.glos-term::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--rust);flex-shrink:0;}
+.glos-def{font-size:13px;font-weight:300;line-height:1.65;color:var(--ink3);}
+
+/* ПРАКТИЧЕСКАЯ ЧАСТЬ */
+#practice{background:var(--ink);padding:120px 60px;position:relative;overflow:hidden;}
+.practice-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(196,82,42,.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 50%,rgba(58,107,138,.08) 0%,transparent 60%);}
+.practice-inner{max-width:1380px;margin:0 auto;position:relative;z-index:2;}
+.practice-header{margin-bottom:56px;}
+.practice-badge{font-size:10px;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--gold2);margin-bottom:24px;display:flex;align-items:center;gap:10px;}
+.practice-badge::before{content:'';width:24px;height:1px;background:var(--gold2);}
+.practice-h{font-family:'Cormorant Garamond',serif;font-size:clamp(36px,4vw,54px);font-weight:300;color:var(--cream);line-height:1.05;letter-spacing:-.5px;}
+.practice-h strong{font-weight:700;color:var(--gold2);}
+.practice-desc{font-size:15px;font-weight:300;color:rgba(250,248,243,.5);margin-top:16px;max-width:600px;line-height:1.75;}
+.editor-layout{display:grid;grid-template-columns:320px 1fr 300px;gap:2px;background:rgba(250,248,243,.04);border:1px solid rgba(250,248,243,.08);}
+.ed-panel{background:#141008;padding:0;}
+.ed-panel-header{padding:16px 20px;border-bottom:1px solid rgba(250,248,243,.06);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(250,248,243,.4);display:flex;align-items:center;gap:8px;}
+.ed-panel-header::before{content:'';width:6px;height:6px;background:var(--gold2);border-radius:50%;opacity:.6;}
+.ed-prop-group{padding:16px 20px;border-bottom:1px solid rgba(250,248,243,.04);}
+.ed-prop-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(250,248,243,.3);margin-bottom:10px;}
+.ed-prop-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.ed-prop-name{font-size:12px;color:rgba(250,248,243,.6);}
+.ed-prop-val{font-size:12px;color:var(--gold2);font-family:monospace;min-width:48px;text-align:right;}
+.ed-slider{-webkit-appearance:none;appearance:none;width:100%;height:2px;background:rgba(250,248,243,.1);outline:none;margin:6px 0;}
+.ed-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--gold2);cursor:pointer;border:2px solid var(--ink);}
+.ed-slider::-webkit-slider-thumb:hover{background:#fff;}
+.ed-color-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.ed-color{width:26px;height:26px;border-radius:4px;cursor:pointer;border:2px solid transparent;transition:border-color .2s,transform .2s;}
+.ed-color:hover{transform:scale(1.1);}
+.ed-color.active{border-color:#fff;}
+.ed-select{width:100%;background:rgba(250,248,243,.06);border:1px solid rgba(250,248,243,.1);color:rgba(250,248,243,.8);font-size:12px;padding:8px 10px;font-family:'DM Sans',sans-serif;cursor:pointer;margin-top:4px;}
+.ed-select option{background:#1a1610;}
+.ed-btn-sm{padding:8px 14px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.ed-btn-primary{background:var(--rust);color:#fff;}
+.ed-btn-primary:hover{background:#e0602f;}
+.ed-btn-ghost{background:rgba(250,248,243,.07);color:rgba(250,248,243,.6);border:1px solid rgba(250,248,243,.1);}
+.ed-btn-ghost:hover{background:rgba(250,248,243,.12);color:rgba(250,248,243,.9);}
+.ed-btn-gold{background:rgba(200,147,58,.15);color:var(--gold2);border:1px solid rgba(200,147,58,.3);}
+.ed-btn-gold:hover{background:rgba(200,147,58,.25);}
+.ed-btns{display:flex;gap:6px;flex-wrap:wrap;padding:12px 20px;}
+.ed-viewport{background:#0d0b07;position:relative;min-height:520px;}
+#practiceCanvas{width:100%;height:100%;display:block;min-height:520px;}
+.ed-viewport-label{position:absolute;top:12px;left:16px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(250,248,243,.2);}
+.ed-viewport-axes{position:absolute;bottom:16px;right:16px;width:60px;height:60px;}
+.ed-fps{position:absolute;top:12px;right:16px;font-size:10px;font-family:monospace;color:rgba(200,147,58,.5);}
+.ed-timeline{background:#0f0d09;}
+.ed-tl-header{padding:16px 20px;border-bottom:1px solid rgba(250,248,243,.06);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(250,248,243,.4);display:flex;align-items:center;gap:8px;}
+.ed-tl-header::before{content:'';width:6px;height:6px;background:var(--rust);border-radius:50%;opacity:.6;}
+.ed-tl-track{padding:12px 16px;border-bottom:1px solid rgba(250,248,243,.04);}
+.ed-tl-track-label{font-size:10px;color:rgba(250,248,243,.35);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;}
+.ed-tl-bar{height:8px;background:rgba(250,248,243,.06);border-radius:4px;position:relative;cursor:pointer;}
+.ed-tl-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--rust),var(--gold2));transform-origin:left;transition:width .1s;}
+.ed-tl-head{position:absolute;top:-4px;width:3px;height:16px;background:var(--gold2);border-radius:2px;transform:translateX(-50%);}
+.ed-keyframes{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;}
+.ed-kf{width:8px;height:8px;border-radius:2px;background:var(--gold);opacity:.7;transition:transform .2s,opacity .2s;}
+.ed-kf:hover{transform:scale(1.3);opacity:1;}
+.ed-playbar{display:flex;align-items:center;gap:10px;padding:14px 16px;border-top:1px solid rgba(250,248,243,.06);}
+.ed-play-btn{width:32px;height:32px;border-radius:50%;background:var(--rust);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s;}
+.ed-play-btn:hover{background:#e0602f;}
+.ed-play-icon{color:#fff;font-size:12px;}
+.ed-frame{font-size:11px;font-family:monospace;color:var(--gold2);}
+.ed-frame span{color:rgba(250,248,243,.3);}
+.ed-curve-wrap{padding:12px 16px;}
+#curveCanvas{width:100%;height:80px;background:rgba(250,248,243,.03);border:1px solid rgba(250,248,243,.06);}
+
+/* Texture picker */
+.texture-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:12px 20px;}
+.tex-swatch{width:100%;aspect-ratio:1;border-radius:4px;cursor:pointer;border:2px solid transparent;transition:border-color .2s,transform .2s;position:relative;overflow:hidden;}
+.tex-swatch:hover{transform:scale(1.05);}
+.tex-swatch.active{border-color:#fff;}
+.tex-swatch span{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:7px;color:rgba(255,255,255,.7);letter-spacing:.5px;text-transform:uppercase;}
+
+/* practice result */
+.practice-result{margin-top:24px;padding:20px 24px;background:rgba(250,248,243,.04);border:1px solid rgba(250,248,243,.08);display:flex;align-items:center;justify-content:space-between;}
+.pr-status{display:flex;align-items:center;gap:12px;}
+.pr-dot{width:8px;height:8px;border-radius:50%;background:var(--sage);}
+.pr-text{font-size:13px;color:rgba(250,248,243,.6);}
+.pr-export{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold2);cursor:pointer;background:none;border:1px solid rgba(200,147,58,.3);padding:8px 16px;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.pr-export:hover{background:rgba(200,147,58,.1);}
+
+/* FOOTER */
+footer{background:var(--ink2);padding:72px 60px 48px;}
+.footer-top{display:grid;grid-template-columns:1fr 1fr 1fr;gap:60px;padding-bottom:56px;border-bottom:1px solid rgba(250,248,243,.08);}
+.footer-brand .fl{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--cream);margin-bottom:12px;}
+.footer-brand .fl span{color:var(--gold2);}
+.footer-brand p{font-size:13px;font-weight:300;line-height:1.7;color:rgba(250,248,243,.4);max-width:280px;}
+.footer-col-title{font-size:10px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:var(--gold2);margin-bottom:24px;}
+.footer-links-list{display:flex;flex-direction:column;gap:12px;}
+.footer-links-list a{font-size:13px;font-weight:300;color:rgba(250,248,243,.45);text-decoration:none;transition:color .2s;}
+.footer-links-list a:hover{color:var(--cream);}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:28px;}
+.footer-copy{font-size:11px;color:rgba(250,248,243,.25);letter-spacing:1px;}
+
+/* SCROLL REVEAL */
+.reveal{opacity:0;transform:translateY(40px);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1);}
+.reveal.in{opacity:1;transform:translateY(0);}
+.reveal-left{opacity:0;transform:translateX(-40px);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1);}
+.reveal-left.in{opacity:1;transform:translateX(0);}
+.reveal-right{opacity:0;transform:translateX(40px);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1);}
+.reveal-right.in{opacity:1;transform:translateX(0);}
+.reveal-scale{opacity:0;transform:scale(.92);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1);}
+.reveal-scale.in{opacity:1;transform:scale(1);}
+.reveal.delay-1{transition-delay:.12s;}
+.reveal.delay-2{transition-delay:.24s;}
+.reveal.delay-3{transition-delay:.36s;}
+.reveal.delay-4{transition-delay:.48s;}
+.reveal-left.delay-1,.reveal-right.delay-1{transition-delay:.12s;}
+.reveal-left.delay-2,.reveal-right.delay-2{transition-delay:.24s;}
+.reveal-left.delay-3,.reveal-right.delay-3{transition-delay:.36s;}
+
+/* Kubrick-style scroll animations */
+.js-parallax{will-change:transform;}
+.js-scale{will-change:transform;}
+
+/* Horizontal ticker / scrolling band */
+#ticker-band{background:var(--rust);padding:18px 0;overflow:hidden;white-space:nowrap;}
+.ticker-inner{display:inline-flex;gap:0;animation:ticker 22s linear infinite;}
+.ticker-item{font-size:13px;font-weight:500;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.85);padding:0 40px;display:flex;align-items:center;gap:20px;}
+.ticker-item::before{content:'✦';color:rgba(255,255,255,.4);font-size:10px;}
+@keyframes ticker{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+
+/* Big fullscreen text sections (kubrick) */
+.fs-text-section{height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:var(--ink);}
+.fs-text-section .fs-bg-num{position:absolute;font-family:'Cormorant Garamond',serif;font-size:clamp(200px,30vw,400px);font-weight:700;color:rgba(250,248,243,.03);line-height:1;pointer-events:none;user-select:none;}
+.fs-text{text-align:center;position:relative;z-index:2;padding:0 60px;}
+.fs-text .pre{font-size:10px;letter-spacing:5px;text-transform:uppercase;color:var(--gold2);margin-bottom:28px;opacity:0;}
+.fs-text h2{font-family:'Cormorant Garamond',serif;font-size:clamp(48px,7vw,110px);font-weight:300;line-height:1.0;color:var(--cream);letter-spacing:-2px;}
+.fs-text h2 em{color:var(--gold2);font-style:italic;}
+.fs-text h2 strong{font-weight:700;}
+.fs-text .sub{font-size:16px;font-weight:300;color:rgba(250,248,243,.45);margin-top:24px;max-width:540px;margin-left:auto;margin-right:auto;line-height:1.7;}
+
+/* Horizontal reveal for feature rows */
+.feature-row{display:grid;grid-template-columns:1fr 1fr;min-height:80vh;overflow:hidden;}
+.feature-row.rev{direction:rtl;}
+.feature-row.rev>*{direction:ltr;}
+.feature-img{background:var(--cream2);position:relative;overflow:hidden;min-height:500px;}
+.feature-img canvas{width:100%;height:100%;display:block;}
+.feature-body{background:var(--cream);padding:80px 60px;display:flex;flex-direction:column;justify-content:center;}
+.feature-label{font-size:10px;font-weight:500;letter-spacing:4px;text-transform:uppercase;color:var(--rust);margin-bottom:24px;display:flex;align-items:center;gap:10px;}
+.feature-label::before{content:'';width:24px;height:1px;background:var(--rust);}
+.feature-h{font-family:'Cormorant Garamond',serif;font-size:clamp(36px,4vw,56px);font-weight:300;line-height:1.1;letter-spacing:-.5px;}
+.feature-h strong{font-weight:700;}
+.feature-p{font-size:15px;font-weight:300;line-height:1.8;color:var(--ink3);margin-top:20px;max-width:440px;}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--cream2);}
+::-webkit-scrollbar-thumb{background:var(--rust);}
+
+@media(max-width:960px){
+  #hero{grid-template-columns:1fr;}
+  .hero-right{height:50vw;}
+  .intro-band,.what-inner,.tl-header,.tools-head,.tools-grid,.tech-grid,.rend-grid,.glos-grid,.footer-top{grid-template-columns:1fr;}
+  .tl-steps{grid-template-columns:1fr 1fr;}
+  .tip-row{grid-template-columns:1fr;}
+  .teapot-content,.feature-row{grid-template-columns:1fr;}
+  .editor-layout{grid-template-columns:1fr;}
+  nav{padding:0 24px;}
+  .nav-links{display:none;}
+  section,#what,#timeline,#techniques,#tools,#renderers,#tips,#glossary,#practice,#teapot-section{padding:80px 24px;}
+  .intro-band{padding:60px 24px;}
+  footer{padding:60px 24px 40px;}
+  .hero-left{padding:100px 24px 64px;}
+  .quote-block{padding:80px 24px;}
+  .fs-text{padding:0 24px;}
+}
+</style>
+</head>
+<body class="cur-dark">
+
+<div id="cur"></div>
+<div id="cur2"></div>
+<div id="progress"></div>
+
+<nav id="nav">
+  <div class="nav-logo">3DS<span>Max</span> · Анимация</div>
+  <div class="nav-links">
+    <a href="#what">Что такое</a>
+    <a href="#teapot-section">Чайник</a>
+    <a href="#techniques">Техники</a>
+    <a href="#tools">Инструменты</a>
+    <a href="#practice">Практика</a>
+    <a href="#glossary">Словарь</a>
+  </div>
+  <button class="nav-btn" onclick="document.getElementById('practice').scrollIntoView({behavior:'smooth'})">Попробовать</button>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-left">
+    <div class="hero-tag">Трёхмерная анимация</div>
+    <h1 class="hero-h1">Создание<br><strong>Анимации</strong><br><em>в 3DS Max</em></h1>
+    <p class="hero-sub">Полное руководство по созданию профессиональных 3D анимаций — от первого полигона до финального рендера с кинематографическим качеством.</p>
+    <div class="hero-actions">
+      <button class="btn-main" onclick="document.getElementById('what').scrollIntoView({behavior:'smooth'})">Начать изучение</button>
+      <a href="#practice" class="btn-link">Практика →</a>
+    </div>
+    <div class="hero-scroll">
+      <div class="scroll-bar"></div>
+      <span>Листай вниз</span>
+    </div>
+  </div>
+  <div class="hero-right" style="position:relative;">
+    <canvas id="heroCanvas" style="position:absolute;inset:0;width:100%;height:100%;"></canvas>
+    <div class="hero-right-label">3D Wireframe Visualisation</div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-n">40+</div><div class="hstat-l">лет истории</div></div>
+      <div class="hstat"><div class="hstat-n">3M+</div><div class="hstat-l">пользователей</div></div>
+      <div class="hstat"><div class="hstat-n">∞</div><div class="hstat-l">возможностей</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div id="ticker-band">
+  <div class="ticker-inner">
+    <span class="ticker-item">Keyframe Animation</span>
+    <span class="ticker-item">Curve Editor</span>
+    <span class="ticker-item">Rigging & Skinning</span>
+    <span class="ticker-item">MassFX Physics</span>
+    <span class="ticker-item">Particle Flow</span>
+    <span class="ticker-item">Motion Capture</span>
+    <span class="ticker-item">V-Ray Rendering</span>
+    <span class="ticker-item">Arnold Renderer</span>
+    <span class="ticker-item">CAT & Biped</span>
+    <span class="ticker-item">Morph Targets</span>
+    <span class="ticker-item">Keyframe Animation</span>
+    <span class="ticker-item">Curve Editor</span>
+    <span class="ticker-item">Rigging & Skinning</span>
+    <span class="ticker-item">MassFX Physics</span>
+    <span class="ticker-item">Particle Flow</span>
+    <span class="ticker-item">Motion Capture</span>
+    <span class="ticker-item">V-Ray Rendering</span>
+    <span class="ticker-item">Arnold Renderer</span>
+    <span class="ticker-item">CAT & Biped</span>
+    <span class="ticker-item">Morph Targets</span>
+  </div>
+</div>
+
+<!-- INTRO BAND -->
+<div class="intro-band">
+  <div class="iband-item reveal">
+    <div class="iband-num">01</div>
+    <div class="iband-title">Индустриальный стандарт</div>
+    <div class="iband-text">3DS Max используется в кино, играх, архитектуре и рекламе по всему миру уже более 30 лет.</div>
+  </div>
+  <div class="iband-item reveal delay-1">
+    <div class="iband-num">02</div>
+    <div class="iband-title">Полный пайплайн</div>
+    <div class="iband-text">Моделирование, риггинг, анимация, рендеринг — всё в одном приложении от Autodesk.</div>
+  </div>
+  <div class="iband-item reveal delay-2">
+    <div class="iband-num">03</div>
+    <div class="iband-title">Интеграция со всем</div>
+    <div class="iband-text">Совместимость с V-Ray, Arnold, Maya, Substance, After Effects и сотнями плагинов.</div>
+  </div>
+</div>
+
+<!-- WHAT IS -->
+<section id="what">
+  <div class="what-inner">
+    <div class="what-sticky reveal-left">
+      <div class="what-label">О программе</div>
+      <h2 class="what-title">Что такое<br><strong>3DS Max</strong><br>и как<br>создаётся анимация</h2>
+      <div class="what-deco"></div>
+    </div>
+    <div class="what-content">
+      <p class="what-lead reveal">3DS Max — это профессиональная программа трёхмерного моделирования, анимации и рендеринга от Autodesk, которая десятилетиями определяет стандарты визуализации в кино, играх и архитектуре.</p>
+      <div class="what-body reveal">
+        <p>Анимация в 3DS Max строится на принципе <strong>ключевых кадров (Keyframes)</strong>. Аниматор задаёт позиции объекта в определённые моменты времени, а программа автоматически рассчитывает промежуточные состояния — так называемую <strong>интерполяцию</strong>.</p>
+        <p>Главный инструмент управления анимацией — <strong>Timeline (Шкала времени)</strong> и <strong>Curve Editor (Редактор кривых)</strong>. Curve Editor позволяет видеть и редактировать кривые движения, скорости и ускорения каждого параметра.</p>
+        <p>Для анимации персонажей используется система <strong>риггинга</strong>: к модели привязывается скелет из костей и суставов, настраиваются веса влияния и системы IK/FK.</p>
+        <p>Физические симуляции (<strong>MassFX, Particle Flow, Cloth</strong>) добавляют динамику: разрушения, ткань, жидкость, огонь и частицы подчиняются законам физики.</p>
+      </div>
+      <div class="what-tags reveal">
+        <span class="wtag">Keyframes</span><span class="wtag">Timeline</span><span class="wtag">Curve Editor</span>
+        <span class="wtag">IK / FK</span><span class="wtag">Rigging</span><span class="wtag">MassFX</span>
+        <span class="wtag">Particle Flow</span><span class="wtag">Skinning</span><span class="wtag">CAT</span><span class="wtag">Biped</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- KUBRICK-STYLE FULLSCREEN TEXT SECTION -->
+<div class="fs-text-section" id="fs1" data-parallax="0.3">
+  <div class="fs-bg-num">3D</div>
+  <div class="fs-text">
+    <div class="pre reveal">Принцип анимации</div>
+    <h2 class="reveal" style="transition-delay:.15s">Движение — это<br><em>не перемещение</em><br><strong>объектов</strong></h2>
+    <p class="sub reveal" style="transition-delay:.3s">Это искусство создавать <em>вес</em>, <em>инерцию</em> и <em>характер</em> через управление кривыми времени и пространства</p>
+  </div>
+</div>
+
+<!-- TEAPOT SECTION -->
+<section id="teapot-section">
+  <div class="teapot-bg-grid"></div>
+  <div class="teapot-content">
+    <div class="teapot-left reveal-left">
+      <div class="teapot-badge">Классика 3D — Utah Teapot</div>
+      <h2 class="teapot-h">Анимация<br><strong>Чайника Юты</strong></h2>
+      <p class="teapot-desc">«Чайник Юты» создан в 1975 году Мартином Ньюэллом и стал стандартным тестовым объектом для отработки техник освещения, рендеринга и анимации. Нажимай кнопки, чтобы переключать режимы.</p>
+      <div class="teapot-steps">
+        <div class="tstep"><div class="tstep-n">01</div><div class="tstep-body"><div class="tstep-t">Wireframe режим</div><div class="tstep-d">Сетка полигонов показывает топологию модели — основу любой анимации</div></div></div>
+        <div class="tstep"><div class="tstep-n">02</div><div class="tstep-body"><div class="tstep-t">Вращение по ключевым кадрам</div><div class="tstep-d">Euler-углы по трём осям с Bezier-интерполяцией для плавности</div></div></div>
+        <div class="tstep"><div class="tstep-n">03</div><div class="tstep-body"><div class="tstep-t">Phong-шейдинг и блики</div><div class="tstep-d">Динамическое освещение — основа понимания материалов в 3D</div></div></div>
+        <div class="tstep"><div class="tstep-n">04</div><div class="tstep-body"><div class="tstep-t">Bounce / Squash & Stretch</div><div class="tstep-d">Принцип упругости — чайник «оживает» благодаря деформациям</div></div></div>
+      </div>
+    </div>
+    <div class="teapot-right">
+      <canvas id="teapotCanvas"></canvas>
+      <div class="teapot-controls">
+        <button class="tctl-btn active" id="btn-rotate">Вращение</button>
+        <button class="tctl-btn" id="btn-bounce">Bounce</button>
+        <button class="tctl-btn" id="btn-shaded">Shaded</button>
+        <button class="tctl-btn" id="btn-wire">Wireframe</button>
+        <button class="tctl-btn" id="btn-explode">Взрыв</button>
+        <button class="tctl-btn" id="btn-float">Левитация</button>
+        <button class="tctl-btn" id="btn-spin">Спин ×3</button>
+      </div>
+      <div class="teapot-label">Utah Teapot · 1975</div>
+    </div>
+  </div>
+</section>
+
+<!-- HORIZONTAL SCROLLING FEATURE (kubrick-inspired) -->
+<div id="ticker-band" style="background:var(--cream3);border-top:1px solid var(--cream3);">
+  <div class="ticker-inner" style="animation-direction:reverse;">
+    <span class="ticker-item" style="color:var(--ink3);">Моделирование</span>
+    <span class="ticker-item" style="color:var(--ink3);">Текстурирование</span>
+    <span class="ticker-item" style="color:var(--ink3);">Освещение</span>
+    <span class="ticker-item" style="color:var(--ink3);">Риггинг</span>
+    <span class="ticker-item" style="color:var(--ink3);">Анимация</span>
+    <span class="ticker-item" style="color:var(--ink3);">Рендер</span>
+    <span class="ticker-item" style="color:var(--ink3);">Компоузинг</span>
+    <span class="ticker-item" style="color:var(--ink3);">Моделирование</span>
+    <span class="ticker-item" style="color:var(--ink3);">Текстурирование</span>
+    <span class="ticker-item" style="color:var(--ink3);">Освещение</span>
+    <span class="ticker-item" style="color:var(--ink3);">Риггинг</span>
+    <span class="ticker-item" style="color:var(--ink3);">Анимация</span>
+    <span class="ticker-item" style="color:var(--ink3);">Рендер</span>
+    <span class="ticker-item" style="color:var(--ink3);">Компоузинг</span>
+  </div>
+</div>
+
+<!-- TIMELINE -->
+<section id="timeline">
+  <div class="tl-inner">
+    <div class="tl-header">
+      <div class="reveal">
+        <div class="what-label">Процесс создания</div>
+        <h2 class="section-title">Путь от идеи<br><strong>до анимации</strong></h2>
+      </div>
+      <div class="tl-intro reveal">Каждая анимация проходит пять ключевых этапов. Понимание этого пайплайна позволяет работать системно и получать предсказуемый профессиональный результат.</div>
+    </div>
+    <div class="tl-steps">
+      <div class="tl-step reveal"><div class="tl-dot">1</div><div class="tl-step-title">Концепция и сторибординг</div><div class="tl-step-text">Раскадровка, референсы, планирование хронометража и ключевых поз.</div></div>
+      <div class="tl-step reveal delay-1"><div class="tl-dot">2</div><div class="tl-step-title">Моделирование</div><div class="tl-step-text">Создание 3D-геометрии, сглаживание, оптимизация топологии.</div></div>
+      <div class="tl-step reveal delay-2"><div class="tl-dot">3</div><div class="tl-step-title">Риггинг</div><div class="tl-step-text">Создание скелета, настройка весов, IK-цепочки, контроллеры.</div></div>
+      <div class="tl-step reveal delay-3"><div class="tl-dot">4</div><div class="tl-step-title">Анимация</div><div class="tl-step-text">Ключи, Curve Editor, тайминг и спейсинг. Характер движению.</div></div>
+      <div class="tl-step reveal delay-4"><div class="tl-dot">5</div><div class="tl-step-title">Рендер и пост</div><div class="tl-step-text">Освещение, материалы, рендер, компоузинг, финальный монтаж.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- BIG TEXT SECTION 2 -->
+<div class="fs-text-section" style="background:var(--cream);" data-light="true">
+  <div class="fs-bg-num" style="color:rgba(26,22,16,.025);">∞</div>
+  <div class="fs-text">
+    <div class="pre reveal" style="color:var(--rust);">12 принципов Диснея</div>
+    <h2 class="reveal" style="transition-delay:.15s;color:var(--ink);">Squash <em style="color:var(--rust);">&</em><br><strong>Stretch.</strong><br>Timing.</h2>
+    <p class="sub reveal" style="transition-delay:.3s;color:var(--ink3);">Принципы, открытые в 1930-х, по-прежнему остаются основой профессиональной анимации — в 3DS Max, Blender и любом другом пакете</p>
+  </div>
+</div>
+
+<!-- TECHNIQUES -->
+<section id="techniques">
+  <div class="tech-inner">
+    <div class="tech-header reveal">
+      <div class="what-label">Техники анимации</div>
+      <h2 class="section-title">Основные методы<br><strong>и подходы</strong></h2>
+    </div>
+    <div class="tech-grid">
+      <div class="tech-card tc1 reveal"><div class="tech-idx">01</div><svg class="tech-icon" width="44" height="44" viewBox="0 0 44 44" fill="none"><rect x="4" y="4" width="36" height="36" rx="2" fill="none" stroke="#c4522a" stroke-width="1.5"/><circle cx="14" cy="22" r="4" fill="#c4522a" opacity=".7"/><circle cx="30" cy="14" r="4" fill="#c4522a" opacity=".4"/><circle cx="30" cy="30" r="4" fill="#c4522a" opacity=".4"/><line x1="14" y1="22" x2="30" y2="14" stroke="#c4522a" stroke-width="1" stroke-dasharray="3 2"/><line x1="14" y1="22" x2="30" y2="30" stroke="#c4522a" stroke-width="1" stroke-dasharray="3 2"/></svg><div class="tech-title">Keyframe-анимация</div><div class="tech-desc">Классический метод: аниматор задаёт параметры в ключевые моменты, программа строит интерполяцию между ними. Полный контроль над каждым движением.</div><ul class="tech-list"><li>Auto / Set Key режимы</li><li>Curve Editor для кривых</li><li>Dope Sheet для ключей</li></ul></div>
+      <div class="tech-card tc2 reveal delay-1"><div class="tech-idx">02</div><svg class="tech-icon" width="44" height="44" viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="16" fill="none" stroke="#c8933a" stroke-width="1.5"/><line x1="22" y1="6" x2="22" y2="38" stroke="#c8933a" stroke-width="1" opacity=".4"/><circle cx="22" cy="10" r="3" fill="#c8933a"/><circle cx="22" cy="34" r="3" fill="#c8933a" opacity=".5"/><path d="M22 10 Q32 16 32 22 Q32 28 22 34" fill="none" stroke="#c8933a" stroke-width="1.5"/></svg><div class="tech-title">Скелетная анимация</div><div class="tech-desc">Модель привязывается к иерархии костей. Движение костей деформирует меш. Используется для персонажей, существ, механизмов.</div><ul class="tech-list"><li>CAT и Biped системы</li><li>Skin Modifier</li><li>IK / FK переключение</li></ul></div>
+      <div class="tech-card tc3 reveal"><div class="tech-idx">03</div><svg class="tech-icon" width="44" height="44" viewBox="0 0 44 44" fill="none"><path d="M8 36 Q14 10 22 28 Q30 10 36 36" fill="none" stroke="#5a7a5e" stroke-width="1.5"/><circle cx="8" cy="36" r="3" fill="#5a7a5e"/><circle cx="36" cy="36" r="3" fill="#5a7a5e"/><circle cx="22" cy="28" r="3" fill="#5a7a5e" opacity=".6"/></svg><div class="tech-title">Процедурная анимация</div><div class="tech-desc">Движение вычисляется по математическим формулам. Wire Parameters, Reactor, выражения через Script Controller создают автоматические взаимосвязи.</div><ul class="tech-list"><li>Wire Parameters</li><li>MAXScript контроллеры</li><li>Noise / Wave модификаторы</li></ul></div>
+      <div class="tech-card tc4 reveal delay-1"><div class="tech-idx">04</div><svg class="tech-icon" width="44" height="44" viewBox="0 0 44 44" fill="none"><rect x="8" y="18" width="28" height="20" rx="2" fill="none" stroke="#3a6b8a" stroke-width="1.5"/><path d="M14 18 L14 12 Q14 6 22 6 Q30 6 30 12 L30 18" fill="none" stroke="#3a6b8a" stroke-width="1.5"/><circle cx="22" cy="29" r="4" fill="#3a6b8a" opacity=".5"/></svg><div class="tech-title">Физические симуляции</div><div class="tech-desc">MassFX просчитывает столкновения, гравитацию, упругость. Cloth Modifier симулирует ткань. Particle Flow создаёт системы частиц.</div><ul class="tech-list"><li>MassFX (Rigid / Soft Body)</li><li>Cloth Modifier</li><li>Particle Flow (PFlow)</li></ul></div>
+      <div class="tech-card tc5 reveal"><div class="tech-idx">05</div><svg class="tech-icon" width="44" height="44" viewBox="0 0 44 44" fill="none"><ellipse cx="22" cy="22" rx="16" ry="8" fill="none" stroke="#c4522a" stroke-width="1.5"/><ellipse cx="22" cy="22" rx="8" ry="16" fill="none" stroke="#c4522a" stroke-width="1" opacity=".5"/><circle cx="22" cy="22" r="3" fill="#c4522a"/></svg><div class="tech-title">Морфинг (Morph Targets)</div><div class="tech-desc">Несколько вариантов меша плавно перетекают друг в друга. Незаменим для мимики лица, синхронизации речи и деформаций персонажей.</div><ul class="tech-list"><li>Morpher Modifier</li><li>Blend Shapes</li><li>Facial Rig + PSD</li></ul></div>
+      <div class="tech-card tc6 reveal delay-1"><div class="tech-idx">06</div><svg class="tech-icon" width="44" height="44" viewBox="0 0 44 44" fill="none"><path d="M10 34 L10 16 L22 8 L34 16 L34 34 Z" fill="none" stroke="#c8933a" stroke-width="1.5"/><line x1="10" y1="22" x2="34" y2="22" stroke="#c8933a" stroke-width="1" opacity=".4"/><line x1="22" y1="8" x2="22" y2="34" stroke="#c8933a" stroke-width="1" opacity=".4"/></svg><div class="tech-title">Motion Capture (MoCap)</div><div class="tech-desc">Ретаргетинг захваченных данных движения на 3D-персонажей. Очистка данных, Motion Mixer, слияние захвата с ручной анимацией.</div><ul class="tech-list"><li>BIP / BVH формат файлов</li><li>Motion Mixer</li><li>Ретаргетинг на CAT/Biped</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- TOOLS -->
+<section id="tools">
+  <div class="tools-inner">
+    <div class="tools-head">
+      <div class="reveal"><div class="tools-label">Экосистема</div><h2 class="tools-title">Инструменты<br><strong>и рендереры</strong></h2></div>
+      <div class="tools-sub reveal">3DS Max — центр мощного пайплайна. Вокруг него выстроена целая экосистема инструментов, которые вместе создают профессиональный результат.</div>
+    </div>
+    <div class="tools-grid">
+      <div class="tool-item reveal"><div class="tool-dot"></div><div class="tool-name">Autodesk 3DS Max</div><div class="tool-role">Ядро пайплайна</div></div>
+      <div class="tool-item reveal delay-1"><div class="tool-dot"></div><div class="tool-name">V-Ray</div><div class="tool-role">Фотореализм</div></div>
+      <div class="tool-item reveal delay-2"><div class="tool-dot"></div><div class="tool-name">Arnold Renderer</div><div class="tool-role">Кинематографический</div></div>
+      <div class="tool-item reveal delay-3"><div class="tool-dot"></div><div class="tool-name">Corona Renderer</div><div class="tool-role">Архивизуализация</div></div>
+      <div class="tool-item reveal"><div class="tool-dot"></div><div class="tool-name">Substance Painter</div><div class="tool-role">PBR текстурирование</div></div>
+      <div class="tool-item reveal delay-1"><div class="tool-dot"></div><div class="tool-name">After Effects</div><div class="tool-role">Компоузинг</div></div>
+      <div class="tool-item reveal delay-2"><div class="tool-dot"></div><div class="tool-name">Tyflow</div><div class="tool-role">Процедурные эффекты</div></div>
+      <div class="tool-item reveal delay-3"><div class="tool-dot"></div><div class="tool-name">Forest Pack</div><div class="tool-role">Рассеивание объектов</div></div>
+      <div class="tool-item reveal"><div class="tool-dot"></div><div class="tool-name">Marvelous Designer</div><div class="tool-role">Симуляция одежды</div></div>
+      <div class="tool-item reveal delay-1"><div class="tool-dot"></div><div class="tool-name">ZBrush</div><div class="tool-role">Скульптинг деталей</div></div>
+      <div class="tool-item reveal delay-2"><div class="tool-dot"></div><div class="tool-name">Chaos Vantage</div><div class="tool-role">Real-time рендер</div></div>
+      <div class="tool-item reveal delay-3"><div class="tool-dot"></div><div class="tool-name">SketchUp / Revit</div><div class="tool-role">Импорт архитектуры</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- RENDERERS -->
+<section id="renderers">
+  <div class="rend-inner">
+    <div class="reveal"><div class="what-label">Рендеринг</div><h2 class="section-title">Три главных<br><strong>рендерера</strong></h2></div>
+    <div class="rend-grid">
+      <div class="rend-card reveal"><div class="rend-num">V-Ray</div><div class="rend-title">Промышленный стандарт</div><div class="rend-desc">V-Ray от Chaos Group — самый распространённый рендерер в архвизе и кино. Физически корректное освещение, GI, SSS, displacement.</div><div class="rend-tags"><span class="rtag">Архвиз</span><span class="rtag">Продукт</span><span class="rtag">Кино</span><span class="rtag">GPU</span></div></div>
+      <div class="rend-card reveal delay-1"><div class="rend-num">Arnold</div><div class="rend-title">Кинематографический</div><div class="rend-desc">Arnold от Autodesk — рендерер крупнейших голливудских студий. Path-tracing, идеальный SSS, объёмный свет и туман.</div><div class="rend-tags"><span class="rtag">VFX</span><span class="rtag">Персонажи</span><span class="rtag">Встроен</span></div></div>
+      <div class="rend-card reveal delay-2"><div class="rend-num">Corona</div><div class="rend-title">Для архитекторов</div><div class="rend-desc">Corona Renderer — любимец архитекторов. Простая настройка, быстрый интерактивный рендер, невероятно естественный свет.</div><div class="rend-tags"><span class="rtag">Интерьер</span><span class="rtag">Экстерьер</span><span class="rtag">Walkthrough</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TIPS -->
+<section id="tips">
+  <div class="tips-inner">
+    <div class="tips-header reveal"><div class="what-label">Профессиональные советы</div><h2 class="section-title">Что нужно знать,<br><strong>чтобы делать хорошо</strong></h2></div>
+    <div class="tips-flow">
+      <div class="tip-row reveal"><div class="tip-n">01</div><div class="tip-title">Снимай видео-референсы для каждого движения</div><div class="tip-text">Прежде чем анимировать прыжок, бег или удар — запишите себя или найдите reference видео. Лучшие аниматоры Pixar и Disney всегда начинают с живых референсов.</div></div>
+      <div class="tip-row reveal"><div class="tip-n">02</div><div class="tip-title">Мастерство — в Curve Editor, а не в расстановке ключей</div><div class="tip-text">90% выразительности анимации создаётся в редакторе кривых. Ease-in, ease-out, overshoot — именно здесь движение обретает вес, инерцию и характер.</div></div>
+      <div class="tip-row reveal"><div class="tip-n">03</div><div class="tip-title">Работай с топологией, удобной для анимации</div><div class="tip-text">Модель для анимации строится иначе, чем статичная. Loops вокруг суставов, правильная плотность сетки в местах деформации — всё это влияет на качество скинирования.</div></div>
+      <div class="tip-row reveal"><div class="tip-n">04</div><div class="tip-title">Используй Motion Capture как основу, не замену</div><div class="tip-text">MoCap-данные дают отличную базу, но всегда требуют ручной доработки. Очистка дрожания, усиление акцентов движения, добавление вторичных движений.</div></div>
+      <div class="tip-row reveal"><div class="tip-n">05</div><div class="tip-title">Планируй свет до моделирования, а не после</div><div class="tip-text">Освещение — это половина анимации. Определите источники света, направление, настроение сцены ещё на этапе концепции.</div></div>
+      <div class="tip-row reveal"><div class="tip-n">06</div><div class="tip-title">Оптимизируй сцену для рендера с самого начала</div><div class="tip-text">Merge-объекты, Xref-сцены, Proxy-модели для тяжёлых мешей, правильные LOD — грамотная организация сцены экономит часы рендера.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- QUOTE -->
+<div class="quote-block reveal-scale">
+  <div class="quote-inner">
+    <span class="quote-mark">"</span>
+    <p class="quote-text">Анимация — это не просто движение объектов. Это искусство наделять неодушевлённые предметы душой, весом и намерением.</p>
+    <div class="quote-src">— Принцип анимации, 12 правил Диснея</div>
+  </div>
+</div>
+
+<!-- PRACTICAL EDITOR -->
+<section id="practice">
+  <div class="practice-bg"></div>
+  <div class="practice-inner">
+    <div class="practice-header reveal">
+      <div class="practice-badge">Интерактивный редактор</div>
+      <h2 class="practice-h">Создай анимацию<br><strong>прямо здесь</strong></h2>
+      <p class="practice-desc">Симулятор интерфейса 3DS Max. Выбирай текстуры, анимации, кривые интерполяции и наблюдай результат в реальном времени.</p>
+    </div>
+
+    <div class="editor-layout reveal">
+      <!-- LEFT PANEL -->
+      <div class="ed-panel">
+        <div class="ed-panel-header">Параметры объекта</div>
+        <div class="ed-prop-group">
+          <div class="ed-prop-label">Трансформация</div>
+          <div class="ed-prop-row"><span class="ed-prop-name">Поворот X</span><span class="ed-prop-val" id="val-rx">0°</span></div>
+          <input type="range" class="ed-slider" id="sl-rx" min="0" max="360" value="0">
+          <div class="ed-prop-row"><span class="ed-prop-name">Поворот Y</span><span class="ed-prop-val" id="val-ry">0°</span></div>
+          <input type="range" class="ed-slider" id="sl-ry" min="0" max="360" value="0">
+          <div class="ed-prop-row"><span class="ed-prop-name">Масштаб</span><span class="ed-prop-val" id="val-sc">1.0</span></div>
+          <input type="range" class="ed-slider" id="sl-sc" min="5" max="20" value="10">
+          <div class="ed-prop-row"><span class="ed-prop-name">Высота (Y)</span><span class="ed-prop-val" id="val-py">0</span></div>
+          <input type="range" class="ed-slider" id="sl-py" min="-80" max="80" value="0">
+        </div>
+        <div class="ed-prop-group">
+          <div class="ed-prop-label">Текстура материала</div>
+          <div class="texture-grid" id="texture-grid"></div>
+        </div>
+        <div class="ed-prop-group">
+          <div class="ed-prop-label">Анимация</div>
+          <select class="ed-select" id="anim-type">
+            <option value="rotate">Вращение (Rotate)</option>
+            <option value="bounce">Прыжок (Bounce)</option>
+            <option value="pulse">Пульсация (Scale Pulse)</option>
+            <option value="swing">Качание (Pendulum)</option>
+            <option value="orbit">Орбита (Orbit)</option>
+            <option value="figure8">Восьмёрка (Figure-8)</option>
+            <option value="spiral">Спираль вверх (Spiral)</option>
+            <option value="wobble">Вибрация (Wobble)</option>
+            <option value="pendulum3d">3D Маятник</option>
+            <option value="sinewave">Синусоида (Sine Wave)</option>
+          </select>
+          <div style="margin-top:10px;">
+            <div class="ed-prop-row"><span class="ed-prop-name">Скорость</span><span class="ed-prop-val" id="val-spd">1.0x</span></div>
+            <input type="range" class="ed-slider" id="sl-spd" min="1" max="30" value="10">
+          </div>
+        </div>
+        <div class="ed-prop-group">
+          <div class="ed-prop-label">Интерполяция</div>
+          <select class="ed-select" id="interp-type">
+            <option value="linear">Linear (Линейная)</option>
+            <option value="ease" selected>Ease In-Out (Bezier)</option>
+            <option value="elastic">Elastic (Упругая)</option>
+            <option value="bounce">Bounce (Отскок)</option>
+            <option value="overshoot">Overshoot (Перехват)</option>
+          </select>
+        </div>
+        <div class="ed-btns">
+          <button class="ed-btn-sm ed-btn-primary" id="btn-add-key">+ Keyframe</button>
+          <button class="ed-btn-sm ed-btn-ghost" id="btn-clear-keys">Очистить</button>
+          <button class="ed-btn-sm ed-btn-gold" id="btn-reset-obj">Сброс</button>
+        </div>
+      </div>
+
+      <!-- CENTER VIEWPORT -->
+      <div class="ed-viewport">
+        <canvas id="practiceCanvas"></canvas>
+        <div class="ed-viewport-label">Perspective Viewport</div>
+        <div class="ed-fps" id="fps-display">24 FPS</div>
+        <svg class="ed-viewport-axes" viewBox="0 0 60 60">
+          <line x1="10" y1="50" x2="45" y2="50" stroke="#c4522a" stroke-width="1.5"/><text x="47" y="54" fill="#c4522a" font-size="9">X</text>
+          <line x1="10" y1="50" x2="10" y2="15" stroke="#5a7a5e" stroke-width="1.5"/><text x="4" y="12" fill="#5a7a5e" font-size="9">Y</text>
+          <line x1="10" y1="50" x2="30" y2="35" stroke="#3a6b8a" stroke-width="1.5"/><text x="31" y="33" fill="#3a6b8a" font-size="9">Z</text>
+        </svg>
+      </div>
+
+      <!-- RIGHT TIMELINE -->
+      <div class="ed-timeline">
+        <div class="ed-tl-header">Шкала времени</div>
+        <div class="ed-tl-track"><div class="ed-tl-track-label">Rotation</div><div class="ed-tl-bar"><div class="ed-tl-fill" id="tl-rot-fill" style="width:0%"></div><div class="ed-tl-head" id="tl-rot-head" style="left:0%"></div></div><div class="ed-keyframes" id="kf-rot"></div></div>
+        <div class="ed-tl-track"><div class="ed-tl-track-label">Position</div><div class="ed-tl-bar"><div class="ed-tl-fill" id="tl-pos-fill" style="width:0%"></div><div class="ed-tl-head" id="tl-pos-head" style="left:0%"></div></div><div class="ed-keyframes" id="kf-pos"></div></div>
+        <div class="ed-tl-track"><div class="ed-tl-track-label">Scale</div><div class="ed-tl-bar"><div class="ed-tl-fill" id="tl-scl-fill" style="width:0%"></div><div class="ed-tl-head" id="tl-scl-head" style="left:0%"></div></div><div class="ed-keyframes" id="kf-scl"></div></div>
+        <div class="ed-curve-wrap">
+          <div class="ed-tl-track-label" style="margin-bottom:6px;">Curve Editor</div>
+          <canvas id="curveCanvas" width="260" height="80"></canvas>
+        </div>
+        <div class="ed-playbar">
+          <button class="ed-play-btn" id="play-btn"><span class="ed-play-icon" id="play-icon">▶</span></button>
+          <div class="ed-frame">Frame <span id="frame-cur">000</span> <span>/ 120</span></div>
+        </div>
+        <div style="padding:0 16px 16px;">
+          <div class="ed-prop-label" style="margin-bottom:8px;">Ключевые кадры</div>
+          <div id="kf-list" style="font-size:11px;color:rgba(250,248,243,.4);font-family:monospace;max-height:120px;overflow-y:auto;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="practice-result">
+      <div class="pr-status"><div class="pr-dot" id="status-dot"></div><div class="pr-text" id="status-text">Анимация воспроизводится — нажми + Keyframe, чтобы добавить ключевой кадр</div></div>
+      <button class="pr-export" id="export-btn">Экспорт настроек</button>
+    </div>
+  </div>
+</section>
+
+<!-- GLOSSARY -->
+<section id="glossary">
+  <div class="glos-inner">
+    <div class="glos-header reveal"><div class="what-label">Словарь терминов</div><h2 class="section-title">Ключевые понятия<br><strong>3DS Max</strong></h2></div>
+    <div class="glos-grid">
+      <div class="glos-item reveal"><div class="glos-term">Keyframe</div><div class="glos-def">Ключевой кадр — момент времени, в котором задаётся состояние объекта. Между ключами строится интерполяция.</div></div>
+      <div class="glos-item reveal delay-1"><div class="glos-term">Timeline</div><div class="glos-def">Шкала времени внизу интерфейса. Показывает все ключевые кадры и позволяет перемещаться по времени.</div></div>
+      <div class="glos-item reveal delay-2"><div class="glos-term">Curve Editor</div><div class="glos-def">Редактор кривых анимации. Управляет скоростью и характером движения через Bezier-кривые.</div></div>
+      <div class="glos-item reveal"><div class="glos-term">Rigging</div><div class="glos-def">Процесс создания скелета и системы управления для модели перед анимацией.</div></div>
+      <div class="glos-item reveal delay-1"><div class="glos-term">Skinning</div><div class="glos-def">Привязка меша к костям. Веса скинирования определяют, насколько каждая кость влияет на вершины.</div></div>
+      <div class="glos-item reveal delay-2"><div class="glos-term">IK / FK</div><div class="glos-def">Inverse / Forward Kinematics — два способа управления цепочками костей. IK — от цели к корню, FK — от корня к концу.</div></div>
+      <div class="glos-item reveal"><div class="glos-term">MassFX</div><div class="glos-def">Встроенный физический движок 3DS Max для симуляции твёрдых тел, коллизий и динамики.</div></div>
+      <div class="glos-item reveal delay-1"><div class="glos-term">Morpher</div><div class="glos-def">Модификатор для морфинга между несколькими формами меша. Используется для мимики и деформаций.</div></div>
+      <div class="glos-item reveal delay-2"><div class="glos-term">CAT / Biped</div><div class="glos-def">Встроенные системы риггинга персонажей с готовыми скелетами и поддержкой MoCap-данных.</div></div>
+      <div class="glos-item reveal"><div class="glos-term">Spline IK</div><div class="glos-def">IK-решатель, управляющий цепочкой через сплайн. Используется для позвоночников, хвостов, верёвок.</div></div>
+      <div class="glos-item reveal delay-1"><div class="glos-term">Render Pass</div><div class="glos-def">Отдельный канал рендера (свет, тень, диффуз, отражение), собираемый при компоузинге.</div></div>
+      <div class="glos-item reveal delay-2"><div class="glos-term">Global Illumination</div><div class="glos-def">Глобальная иллюминация — метод расчёта отражённого света для фотореалистичных сцен.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="fl">3DS<span>Max</span> · Анимация</div>
+      <p>Образовательный ресурс о создании профессиональной 3D анимации в Autodesk 3DS Max.</p>
+    </div>
+    <div>
+      <div class="footer-col-title">Разделы</div>
+      <div class="footer-links-list">
+        <a href="#what">Что такое 3DS Max</a><a href="#teapot-section">Чайник Юты</a>
+        <a href="#timeline">Процесс создания</a><a href="#techniques">Техники анимации</a>
+        <a href="#tools">Инструменты</a><a href="#practice">Практика</a><a href="#glossary">Словарь</a>
+      </div>
+    </div>
+    <div>
+      <div class="footer-col-title">Ресурсы</div>
+      <div class="footer-links-list">
+        <a href="https://www.autodesk.com/products/3ds-max" target="_blank">Официальный сайт Autodesk</a>
+        <a href="https://knowledge.autodesk.com/support/3ds-max" target="_blank">Документация</a>
+        <a href="https://area.autodesk.com" target="_blank">Autodesk Area (галерея)</a>
+        <a href="https://www.chaosgroup.com" target="_blank">Chaos V-Ray</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom"><div class="footer-copy">© 2026 — Создание анимации в 3DS Max · Образовательный материал</div></div>
+</footer>
+
+<script>
+// ══════ CURSOR ══════
+const cur=document.getElementById('cur'),cur2=document.getElementById('cur2');
+let mx=window.innerWidth/2,my=window.innerHeight/2,rx2=mx,ry2=my;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';});
+(function tick(){rx2+=(mx-rx2)*.11;ry2+=(my-ry2)*.11;cur2.style.left=rx2+'px';cur2.style.top=ry2+'px';requestAnimationFrame(tick);})();
+const darkSections=['#teapot-section','#tools','#practice','footer'];
+function updateCursorTheme(){
+  const el=document.elementFromPoint(mx,my);if(!el)return;
+  let node=el,isDark=false;
+  while(node&&node!==document.body){
+    const id=node.id?'#'+node.id:'';
+    if(darkSections.includes(id)||node.tagName==='FOOTER'){isDark=true;break;}
+    const bg=getComputedStyle(node).backgroundColor;
+    if(bg&&bg!=='rgba(0, 0, 0, 0)'&&bg!=='transparent'){
+      const m=bg.match(/\d+/g);
+      if(m){const r=+m[0],g=+m[1],b=+m[2];if(0.299*r+0.587*g+0.114*b<80){isDark=true;break;}}
+    }
+    node=node.parentElement;
+  }
+  document.body.className=isDark?'cur-light':'cur-dark';
+}
+setInterval(updateCursorTheme,60);
+
+// ══════ PROGRESS BAR ══════
+const progressBar=document.getElementById('progress');
+window.addEventListener('scroll',()=>{
+  const s=document.documentElement;
+  progressBar.style.width=(s.scrollTop/(s.scrollHeight-s.clientHeight)*100)+'%';
+  document.getElementById('nav').classList.toggle('scrolled',scrollY>60);
+},{passive:true});
+
+// ══════ SCROLL REVEAL ══════
+const allReveal=document.querySelectorAll('.reveal,.reveal-left,.reveal-right,.reveal-scale');
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');});},{threshold:.07});
+allReveal.forEach(el=>obs.observe(el));
+
+// ══════ KUBRICK-STYLE PARALLAX ON SCROLL ══════
+(function(){
+  const parallaxEls=[];
+  // hero right canvas parallax
+  const heroRight=document.querySelector('.hero-right');
+  if(heroRight)parallaxEls.push({el:heroRight.querySelector('canvas'),speed:0.15,type:'y'});
+  // teapot
+  const teapotC=document.getElementById('teapotCanvas');
+  if(teapotC)parallaxEls.push({el:teapotC,speed:0.08,type:'y',offset:window.innerHeight});
+  // fullscreen text sections parallax
+  document.querySelectorAll('.fs-text-section').forEach(sec=>{
+    const inner=sec.querySelector('.fs-text');
+    if(inner)parallaxEls.push({el:inner,speed:-0.2,type:'y',section:sec});
+    const bgNum=sec.querySelector('.fs-bg-num');
+    if(bgNum)parallaxEls.push({el:bgNum,speed:0.35,type:'y',section:sec});
+  });
+
+  let ticking=false;
+  function onScroll(){
+    if(!ticking){
+      requestAnimationFrame(()=>{
+        const sy=window.scrollY;
+        parallaxEls.forEach(({el,speed,type,offset,section})=>{
+          if(!el)return;
+          let ref=sy;
+          if(section){
+            const rect=section.getBoundingClientRect();
+            ref=sy-(section.offsetTop-window.innerHeight/2);
+          } else if(offset){ref=sy-offset;}
+          el.style.transform=`translateY(${ref*speed}px)`;
+        });
+        ticking=false;
+      });
+      ticking=true;
+    }
+  }
+  window.addEventListener('scroll',onScroll,{passive:true});
+
+  // Stagger reveal for fs-text children
+  const fsTexts=document.querySelectorAll('.fs-text-section');
+  const fsObs=new IntersectionObserver(es=>{
+    es.forEach(e=>{
+      if(e.isIntersecting){
+        const pre=e.target.querySelector('.pre');
+        if(pre){pre.style.transition='opacity 0.7s ease, transform 0.7s ease';pre.style.opacity='1';}
+      }
+    });
+  },{threshold:0.3});
+  fsTexts.forEach(el=>fsObs.observe(el));
+})();
+
+// ══════ HERO CANVAS — Floating wireframe cubes ══════
+(function(){
+  const canvas=document.getElementById('heroCanvas');if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  let W,H;
+  function setSize(){W=canvas.parentElement.offsetWidth||canvas.offsetWidth;H=canvas.parentElement.offsetHeight||window.innerHeight;canvas.width=W;canvas.height=H;}
+  setSize();window.addEventListener('resize',setSize);
+  const CUBES=[];
+  const palette=['#c4522a','#c8933a','#5a7a5e','#3a6b8a','#8a6b3a','#a35a2a'];
+  for(let i=0;i<22;i++){CUBES.push({x:Math.random()*1.2-.1,y:Math.random()*1.2-.1,z:Math.random()*600+100,rx:Math.random()*Math.PI*2,ry:Math.random()*Math.PI*2,rz:Math.random()*Math.PI*2,vrx:(Math.random()-.5)*.008+(Math.random()>.5?.003:-.003),vry:(Math.random()-.5)*.01+(Math.random()>.5?.005:-.005),vrz:(Math.random()-.5)*.006,size:Math.random()*60+25,color:palette[i%palette.length],alpha:Math.random()*.45+.15});}
+  const VERTS=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
+  const EDGES=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+  function rot3(v,rx,ry,rz){let[x,y,z]=v;let y2=y*Math.cos(rx)-z*Math.sin(rx),z2=y*Math.sin(rx)+z*Math.cos(rx);y=y2;z=z2;let x2=x*Math.cos(ry)+z*Math.sin(ry),z3=-x*Math.sin(ry)+z*Math.cos(ry);x=x2;z=z3;let x3=x*Math.cos(rz)-y*Math.sin(rz),y3=x*Math.sin(rz)+y*Math.cos(rz);return[x3,y3,z];}
+  function proj(x,y,z,fov){const s=fov/(fov+z);return[x*s,y*s];}
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,'rgba(243,239,229,.7)');bg.addColorStop(1,'rgba(236,230,216,.9)');ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    CUBES.forEach(c=>{
+      c.rx+=c.vrx;c.ry+=c.vry;c.rz+=c.vrz;
+      const cx=c.x*W,cy=c.y*H,fov=900;
+      const rv=VERTS.map(v=>{const[x,y,z]=rot3([v[0]*c.size,v[1]*c.size,v[2]*c.size],c.rx,c.ry,c.rz);const[px,py]=proj(x,y,z+c.z,fov);return[cx+px,cy+py];});
+      ctx.save();ctx.strokeStyle=c.color;ctx.globalAlpha=c.alpha;ctx.lineWidth=1;
+      EDGES.forEach(([a,b])=>{ctx.beginPath();ctx.moveTo(rv[a][0],rv[a][1]);ctx.lineTo(rv[b][0],rv[b][1]);ctx.stroke();});
+      rv.forEach(([px,py])=>{ctx.beginPath();ctx.arc(px,py,1.5,0,Math.PI*2);ctx.fillStyle=c.color;ctx.fill();});
+      ctx.restore();
+    });
+    ctx.save();ctx.strokeStyle='rgba(196,82,42,.06)';ctx.lineWidth=.5;
+    for(let gx=0;gx<W;gx+=60){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+    for(let gy=0;gy<H;gy+=60){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+    ctx.restore();
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ══════════════════════════════════════════════════
+// UTAH TEAPOT — proper Bezier patch-based model
+// ══════════════════════════════════════════════════
+(function(){
+  const canvas=document.getElementById('teapotCanvas');if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  let W,H;
+  function setSize(){W=canvas.offsetWidth;H=canvas.offsetHeight;canvas.width=W;canvas.height=H;}
+  setSize();window.addEventListener('resize',setSize);
+
+  // Real Utah Teapot Bezier control points (simplified patch set)
+  function buildProperTeapot(){
+    const verts=[];const edges=[];
+
+    // Body — two-stage profile with proper teapot silhouette
+    const bodyProfile=[
+      // [radius, y] — carefully matched to real Utah teapot proportions
+      [0.0, 1.50],  // lid top center
+      [0.16,1.50],  // lid top edge
+      [0.36,1.44],  // lid slope out
+      [0.44,1.32],  // lid base edge
+      [0.40,1.22],  // shoulder top
+      [0.50,1.10],  // shoulder wide
+      [0.56,0.95],  // body top
+      [0.60,0.80],  // body upper
+      [0.60,0.60],  // body mid (widest)
+      [0.58,0.42],  // body lower
+      [0.52,0.26],  // taper
+      [0.44,0.14],  // base curve
+      [0.40,0.06],  // base flat
+      [0.42,0.00],  // base ring (foot)
+    ];
+
+    const segs=24; // revolution segments
+    for(let pi=0;pi<bodyProfile.length;pi++){
+      const[r,y]=bodyProfile[pi];
+      for(let si=0;si<segs;si++){
+        const a=si/segs*Math.PI*2;
+        verts.push([r*Math.cos(a),y-0.75,r*Math.sin(a)]);
+      }
+    }
+    // Ring edges + vertical edges
+    for(let pi=0;pi<bodyProfile.length;pi++){
+      for(let si=0;si<segs;si++){
+        edges.push([pi*segs+si, pi*segs+(si+1)%segs]);
+        if(pi<bodyProfile.length-1)edges.push([pi*segs+si,(pi+1)*segs+si]);
+      }
+    }
+
+    // Lid knob (dome on top)
+    const knobProfile=[[0,1.72],[0.06,1.70],[0.12,1.64],[0.12,1.56],[0.06,1.52],[0,1.50]];
+    const knobSegs=12,knobStart=verts.length;
+    for(let pi=0;pi<knobProfile.length;pi++){
+      const[r,y]=knobProfile[pi];
+      for(let si=0;si<knobSegs;si++){
+        const a=si/knobSegs*Math.PI*2;
+        verts.push([r*Math.cos(a),y-0.75,r*Math.sin(a)]);
+      }
+    }
+    for(let pi=0;pi<knobProfile.length;pi++){
+      for(let si=0;si<knobSegs;si++){
+        edges.push([knobStart+pi*knobSegs+si, knobStart+pi*knobSegs+(si+1)%knobSegs]);
+        if(pi<knobProfile.length-1)edges.push([knobStart+pi*knobSegs+si,knobStart+(pi+1)*knobSegs+si]);
+      }
+    }
+
+    // Spout — curves out from body side, proper spout arc
+    function bezierPt(t,p0,p1,p2,p3){
+      const u=1-t;
+      return[
+        u*u*u*p0[0]+3*u*u*t*p1[0]+3*u*t*t*p2[0]+t*t*t*p3[0],
+        u*u*u*p0[1]+3*u*u*t*p1[1]+3*u*t*t*p2[1]+t*t*t*p3[1],
+      ];
+    }
+    // Spout Bezier control: from body, curves up and out
+    const sp0=[0.52,0.30],sp1=[0.80,0.30],sp2=[0.90,0.60],sp3=[0.80,0.90];
+    const spoutSegs=12,spoutTubeR=5,spoutStart=verts.length;
+    const spoutCenters=[];
+    for(let i=0;i<=spoutSegs;i++){
+      const t=i/spoutSegs;
+      const[sx,sy]=bezierPt(t,sp0,sp1,sp2,sp3);
+      spoutCenters.push([sx,sy-0.75]);
+      const tubeR=0.06*(1-t*.4); // taper
+      for(let r=0;r<spoutTubeR;r++){
+        const a=r/spoutTubeR*Math.PI*2;
+        verts.push([sx+Math.cos(a)*tubeR,sy-0.75,Math.sin(a)*tubeR]);
+      }
+    }
+    for(let i=0;i<spoutSegs;i++){
+      for(let r=0;r<spoutTubeR;r++){
+        edges.push([spoutStart+i*spoutTubeR+r, spoutStart+i*spoutTubeR+(r+1)%spoutTubeR]);
+        edges.push([spoutStart+i*spoutTubeR+r, spoutStart+(i+1)*spoutTubeR+r]);
+      }
+    }
+
+    // Handle — looping on opposite side
+    const hp0=[-0.52,0.28],hp1=[-0.90,0.28],hp2=[-0.90,0.70],hp3=[-0.52,0.70];
+    const handleSegs=12,handleTubeR=4,handleStart=verts.length;
+    for(let i=0;i<=handleSegs;i++){
+      const t=i/handleSegs;
+      const[hx,hy]=bezierPt(t,hp0,hp1,hp2,hp3);
+      const tubeR=0.055;
+      for(let r=0;r<handleTubeR;r++){
+        const a=r/handleTubeR*Math.PI*2;
+        verts.push([hx+Math.cos(a)*tubeR*0.4,hy-0.75,Math.sin(a)*tubeR]);
+      }
+    }
+    for(let i=0;i<handleSegs;i++){
+      for(let r=0;r<handleTubeR;r++){
+        edges.push([handleStart+i*handleTubeR+r, handleStart+i*handleTubeR+(r+1)%handleTubeR]);
+        edges.push([handleStart+i*handleTubeR+r, handleStart+(i+1)*handleTubeR+r]);
+      }
+    }
+
+    return{verts,edges};
+  }
+
+  const teapot=buildProperTeapot();
+  let tRX=0.22,tRY=0,animMode='rotate';
+  let wireOnly=false,shadedMode=false;
+  let teapotColor='#e8b460';
+  let tScale=1,tOffsetY=0;
+
+  function rot3(v,rx,ry){
+    let[x,y,z]=v;
+    let y2=y*Math.cos(rx)-z*Math.sin(rx),z2=y*Math.sin(rx)+z*Math.cos(rx);y=y2;z=z2;
+    let x2=x*Math.cos(ry)+z*Math.sin(ry),z3=-x*Math.sin(ry)+z*Math.cos(ry);x=x2;z=z3;
+    return[x,y,z];
+  }
+  function proj(x,y,z){const s=520/(520+z+2);return[x*s,y*s];}
+
+  function drawTeapot(){
+    ctx.clearRect(0,0,W,H);
+    const baseScale=Math.min(W,H)*0.30;
+    const sc=baseScale*tScale;
+    const cx=W/2,cy=H/2+10;
+
+    // Background dots
+    ctx.save();
+    for(let i=0;i<60;i++){
+      const px=(i*137.508)%W,py=(i*97.3)%H;
+      ctx.beginPath();ctx.arc(px,py,(i%3===0)?1.5:.6,0,Math.PI*2);
+      ctx.fillStyle=`rgba(232,180,96,${.04+.05*(i%4)})`;ctx.fill();
+    }
+    ctx.restore();
+
+    // Ground line
+    ctx.save();ctx.strokeStyle='rgba(232,180,96,.12)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(cx-sc*.9,cy+sc*.45+tOffsetY);ctx.lineTo(cx+sc*.9,cy+sc*.45+tOffsetY);ctx.stroke();
+    ctx.restore();
+
+    const t=Date.now()/1000;
+
+    if(animMode==='rotate'){tRY=t*.65;tScale=1;tOffsetY=0;}
+    else if(animMode==='bounce'){
+      const b=Math.abs(Math.sin(t*2.2));
+      tOffsetY=-b*sc*.32;tScale=1-b*.09+Math.cos(t*2.2)*.02;
+      tRY=t*.3;
+    }
+    else if(animMode==='wire'){wireOnly=true;shadedMode=false;tRY=t*.35;}
+    else if(animMode==='shaded'){shadedMode=true;wireOnly=false;tRY=t*.5;}
+    else if(animMode==='float'){
+      tOffsetY=Math.sin(t*.8)*sc*.15;
+      tRY=t*.4;tScale=1;
+    }
+    else if(animMode==='spin'){tRY=t*2.8;}
+    else if(animMode==='explode'){tRY=t*.5;}
+
+    const{verts,edges}=teapot;
+
+    // Explode mode
+    if(animMode==='explode'){
+      const ef=(Math.sin(t*.7)+1)/2*.35;
+      edges.forEach((e,i)=>{
+        const[a,b]=e;const va=verts[a],vb=verts[b];if(!va||!vb)return;
+        const ga=(i/edges.length)*Math.PI*2;
+        const dx=Math.cos(ga)*ef,dy=Math.sin(ga)*ef*.5;
+        const pa=rot3([va[0]+dx,va[1]+dy,va[2]+dx*.5],tRX,tRY);
+        const pb=rot3([vb[0]+dx,vb[1]+dy,vb[2]+dx*.5],tRX,tRY);
+        const[ax,ay]=proj(pa[0]*sc,pa[1]*sc,pa[2]*sc);
+        const[bx,by]=proj(pb[0]*sc,pb[1]*sc,pb[2]*sc);
+        ctx.beginPath();ctx.moveTo(cx+ax,cy-ay);ctx.lineTo(cx+bx,cy-by);
+        ctx.strokeStyle=`hsla(${(i/edges.length)*60+20},70%,65%,.55)`;ctx.lineWidth=.7;ctx.stroke();
+      });
+      requestAnimationFrame(drawTeapot);return;
+    }
+
+    // Depth-sort edges
+    const drawn=edges.map(([a,b])=>{
+      const va=verts[a],vb=verts[b];if(!va||!vb)return null;
+      const pa=rot3(va,tRX,tRY);const pb=rot3(vb,tRX,tRY);
+      const avgZ=(pa[2]+pb[2])/2;
+      const[ax,ay]=proj(pa[0]*sc,pa[1]*sc,pa[2]*sc);
+      const[bx,by]=proj(pb[0]*sc,pb[1]*sc,pb[2]*sc);
+      // Lighting normal approx
+      const lx=0.5,ly=0.8,lz=-0.3;
+      const nx=pa[0]-pb[0],ny=pa[1]-pb[1],nz=pa[2]-pb[2];
+      const len=Math.sqrt(nx*nx+ny*ny+nz*nz)||1;
+      const dot=(nx/len*lx+ny/len*ly+nz/len*lz);
+      const light=0.4+Math.abs(dot)*0.6;
+      return{ax,ay,bx,by,z:avgZ,light};
+    }).filter(Boolean).sort((a,b)=>b.z-a.z);
+
+    // Shadow
+    ctx.save();ctx.globalAlpha=.1;
+    drawn.forEach(({ax,ay,bx,by})=>{
+      ctx.beginPath();ctx.moveTo(cx+ax*.97,cy+sc*.44+ay*.04+tOffsetY*.3);ctx.lineTo(cx+bx*.97,cy+sc*.44+by*.04+tOffsetY*.3);
+      ctx.strokeStyle='#000';ctx.lineWidth=.5;ctx.stroke();
+    });
+    ctx.restore();
+
+    // Draw teapot
+    drawn.forEach(({ax,ay,bx,by,z,light})=>{
+      const depth=Math.min(1,Math.max(0,(z+1.2)/2.4));
+      let alpha,lineW,color;
+      if(shadedMode){
+        const brightness=Math.floor(light*220);
+        color=`rgb(${brightness},${Math.floor(brightness*.8)},${Math.floor(brightness*.5)})`;
+        alpha=0.7+depth*.3;lineW=1.5;
+      } else {
+        alpha=wireOnly?.25+depth*.35:.38+depth*.55;
+        color=teapotColor;lineW=wireOnly?.7:1.1;
+      }
+      ctx.beginPath();ctx.moveTo(cx+ax,(cy-ay*tScale+tOffsetY));ctx.lineTo(cx+bx,(cy-by*tScale+tOffsetY));
+      ctx.strokeStyle=color;ctx.globalAlpha=alpha;ctx.lineWidth=lineW;ctx.stroke();ctx.globalAlpha=1;
+    });
+
+    // Steam particles from spout tip
+    if(animMode!=='explode'&&animMode!=='wire'){
+      const st=t*55;
+      for(let i=0;i<6;i++){
+        const phase=((st+i*10)%55)/55;
+        const spoutX=cx+sc*.55,spoutY=cy-sc*.15+tOffsetY;
+        const sx=spoutX+Math.sin(phase*Math.PI*4+i)*10*(1-phase);
+        const sy=spoutY-phase*48;
+        ctx.beginPath();ctx.arc(sx,sy,2.5-phase*2,0,Math.PI*2);
+        ctx.fillStyle=`rgba(232,180,96,${.35*(1-phase)})`;ctx.fill();
+      }
+    }
+
+    requestAnimationFrame(drawTeapot);
+  }
+  drawTeapot();
+
+  // Buttons
+  const btnMap={
+    'btn-rotate':()=>{animMode='rotate';wireOnly=false;shadedMode=false;},
+    'btn-bounce':()=>{animMode='bounce';wireOnly=false;shadedMode=false;},
+    'btn-shaded':()=>{animMode='shaded';wireOnly=false;shadedMode=true;},
+    'btn-wire':()=>{animMode='wire';wireOnly=true;shadedMode=false;},
+    'btn-explode':()=>{animMode='explode';wireOnly=false;shadedMode=false;setTimeout(()=>{animMode='rotate';wireOnly=false;},2400);},
+    'btn-float':()=>{animMode='float';wireOnly=false;shadedMode=false;},
+    'btn-spin':()=>{animMode='spin';wireOnly=false;shadedMode=false;},
+  };
+  Object.entries(btnMap).forEach(([id,fn])=>{
+    const btn=document.getElementById(id);
+    if(btn)btn.addEventListener('click',function(){fn();document.querySelectorAll('.tctl-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');});
+  });
+})();
+
+// ══════════════════════════════════════════════════
+// PRACTICE EDITOR — with textures + more animations
+// ══════════════════════════════════════════════════
+(function(){
+  const canvas=document.getElementById('practiceCanvas');
+  const curveCanvas=document.getElementById('curveCanvas');
+  if(!canvas||!curveCanvas)return;
+  const ctx=canvas.getContext('2d');
+  const cctx=curveCanvas.getContext('2d');
+
+  let W,H;
+  function setSize(){W=canvas.offsetWidth;H=canvas.offsetHeight;canvas.width=W;canvas.height=H;}
+  setSize();window.addEventListener('resize',setSize);
+
+  // ── Textures ──
+  const TEXTURES=[
+    {name:'Metal',id:'metal',draw:(ctx,x,y,r)=>{
+      const g=ctx.createRadialGradient(x-r*.3,y-r*.3,r*.1,x,y,r);
+      g.addColorStop(0,'#d8d8e0');g.addColorStop(0.5,'#909098');g.addColorStop(1,'#505058');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.25)';ctx.lineWidth=1;
+      for(let i=0;i<6;i++){ctx.beginPath();ctx.arc(x,y,r*(i/6),0,Math.PI*2);ctx.stroke();}
+    }},
+    {name:'Gold',id:'gold',draw:(ctx,x,y,r)=>{
+      const g=ctx.createRadialGradient(x-r*.4,y-r*.4,r*.05,x,y,r);
+      g.addColorStop(0,'#fff4aa');g.addColorStop(0.4,'#e8b460');g.addColorStop(1,'#8b5e1a');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+    }},
+    {name:'Rust',id:'rust',draw:(ctx,x,y,r)=>{
+      const g=ctx.createRadialGradient(x-r*.3,y-r*.3,r*.1,x,y,r);
+      g.addColorStop(0,'#e07050');g.addColorStop(0.6,'#c4522a');g.addColorStop(1,'#6a2a12');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=0.15;ctx.fillStyle='#3a1a0a';
+      for(let i=0;i<20;i++){ctx.beginPath();ctx.arc(x+(Math.random()-.5)*r*2,y+(Math.random()-.5)*r*2,Math.random()*4,0,Math.PI*2);ctx.fill();}
+      ctx.globalAlpha=1;
+    }},
+    {name:'Ice',id:'ice',draw:(ctx,x,y,r)=>{
+      const g=ctx.createRadialGradient(x-r*.4,y-r*.4,r*.05,x,y,r);
+      g.addColorStop(0,'rgba(220,240,255,1)');g.addColorStop(0.5,'rgba(160,210,255,.9)');g.addColorStop(1,'rgba(80,140,200,.8)');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.4)';ctx.lineWidth=.7;
+      for(let a=0;a<Math.PI*2;a+=Math.PI/4){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+Math.cos(a)*r*.9,y+Math.sin(a)*r*.9);ctx.stroke();}
+    }},
+    {name:'Lava',id:'lava',draw:(ctx,x,y,r,t)=>{
+      const g=ctx.createRadialGradient(x,y,0,x,y,r);
+      g.addColorStop(0,'#fff700');g.addColorStop(0.3,'#ff6600');g.addColorStop(0.7,'#cc2200');g.addColorStop(1,'#330000');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=0.3;ctx.fillStyle='#ff4400';
+      for(let i=0;i<8;i++){const a=t*.8+i*0.785;const d=r*(.3+Math.sin(t*2+i)*.2);ctx.beginPath();ctx.arc(x+Math.cos(a)*d,y+Math.sin(a)*d,r*.18,0,Math.PI*2);ctx.fill();}
+      ctx.globalAlpha=1;
+    }},
+    {name:'Marble',id:'marble',draw:(ctx,x,y,r)=>{
+      ctx.fillStyle='#e8e4de';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+      ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.clip();
+      ctx.strokeStyle='rgba(100,90,80,.2)';ctx.lineWidth=3;
+      for(let i=0;i<8;i++){ctx.beginPath();ctx.moveTo(x-r+i*r*.28,y-r);ctx.bezierCurveTo(x-r*.5+i*r*.28,y,x+r*.5+i*r*.28,y,x+r+i*r*.28,y+r);ctx.stroke();}
+      ctx.restore();
+    }},
+    {name:'Neon',id:'neon',draw:(ctx,x,y,r,t)=>{
+      ctx.fillStyle='#0a0a1a';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+      const colors=['#00ffff','#ff00ff','#00ff88'];
+      for(let i=0;i<3;i++){
+        const a=t+i/3*Math.PI*2;const d=r*.4;
+        ctx.beginPath();ctx.arc(x+Math.cos(a)*d,y+Math.sin(a)*d,r*.3,0,Math.PI*2);
+        ctx.strokeStyle=colors[i];ctx.lineWidth=2;ctx.globalAlpha=.7+Math.sin(t*3+i)*.3;ctx.stroke();ctx.globalAlpha=1;
+      }
+      ctx.strokeStyle='rgba(100,200,255,.3)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.arc(x,y,r*.85,0,Math.PI*2);ctx.stroke();
+    }},
+    {name:'Wood',id:'wood',draw:(ctx,x,y,r)=>{
+      ctx.fillStyle='#8B5E3C';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+      ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.clip();
+      ctx.strokeStyle='rgba(60,30,10,.3)';ctx.lineWidth=2;
+      for(let i=0;i<10;i++){const ri=r*(i/10);ctx.beginPath();ctx.ellipse(x,y,ri,ri*.7,0,0,Math.PI*2);ctx.stroke();}
+      ctx.restore();
+    }},
+    {name:'Wireframe',id:'wire',draw:(ctx,x,y,r)=>{
+      ctx.fillStyle='#0d0b07';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#e8b460';ctx.lineWidth=.8;ctx.globalAlpha=.6;
+      for(let i=0;i<8;i++){ctx.beginPath();ctx.arc(x,y,r*(i/8),0,Math.PI*2);ctx.stroke();}
+      for(let a=0;a<Math.PI*2;a+=Math.PI/6){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r);ctx.stroke();}
+      ctx.globalAlpha=1;
+    }},
+    {name:'Matrix',id:'matrix',draw:(ctx,x,y,r,t)=>{
+      ctx.fillStyle='#001100';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+      ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.clip();
+      ctx.fillStyle='#00ff44';ctx.font='8px monospace';
+      for(let c=0;c<8;c++){for(let row=0;row<8;row++){if(Math.random()>.5){const char=String.fromCharCode(0x30+Math.floor(Math.random()*10));ctx.globalAlpha=.4+Math.random()*.6;ctx.fillText(char,x-r+c*r*.28,y-r+row*r*.28+((t*30+c*20)%r)*.7);}}}
+      ctx.restore();ctx.globalAlpha=1;
+    }},
+  ];
+
+  // Build texture swatches
+  const texGrid=document.getElementById('texture-grid');
+  let activeTex=0;
+  if(texGrid){
+    // Render swatches onto small canvases
+    TEXTURES.forEach((tex,i)=>{
+      const sw=document.createElement('div');sw.className='tex-swatch'+(i===0?' active':'');
+      const sc=document.createElement('canvas');sc.width=48;sc.height=48;sc.style.width='100%';sc.style.height='100%';sc.style.borderRadius='4px';
+      const sx=sc.getContext('2d');
+      tex.draw(sx,24,24,22,0);
+      sw.appendChild(sc);
+      const lbl=document.createElement('span');lbl.textContent=tex.name;sw.appendChild(lbl);
+      sw.addEventListener('click',()=>{activeTex=i;document.querySelectorAll('.tex-swatch').forEach(s=>s.classList.remove('active'));sw.classList.add('active');});
+      texGrid.appendChild(sw);
+    });
+  }
+
+  let state={rx:0,ry:0,sc:1,py:0,animType:'rotate',interp:'ease',speed:1,playing:true};
+  let keyframes=[],frame=0;const totalFrames=120;
+  let fpsCount=0,fpsLast=Date.now(),fpsDisplay=24;
+  let t=0;
+
+  const sliders={
+    'sl-rx':{key:'rx',display:'val-rx',fmt:v=>`${Math.round(v)}°`,scale:v=>v},
+    'sl-ry':{key:'ry',display:'val-ry',fmt:v=>`${Math.round(v)}°`,scale:v=>v},
+    'sl-sc':{key:'sc',display:'val-sc',fmt:v=>`${(v/10).toFixed(1)}`,scale:v=>v/10},
+    'sl-py':{key:'py',display:'val-py',fmt:v=>`${Math.round(v)}`,scale:v=>v},
+    'sl-spd':{key:'speed',display:'val-spd',fmt:v=>`${(v/10).toFixed(1)}x`,scale:v=>v/10},
+  };
+
+  Object.entries(sliders).forEach(([id,{key,display,fmt,scale}])=>{
+    const sl=document.getElementById(id);const dv=document.getElementById(display);
+    if(sl&&dv){sl.addEventListener('input',()=>{const v=+sl.value;state[key]=scale(v);dv.textContent=fmt(v);});}
+  });
+
+  const animSel=document.getElementById('anim-type');
+  if(animSel)animSel.addEventListener('change',()=>{state.animType=animSel.value;});
+  const interpSel=document.getElementById('interp-type');
+  if(interpSel)interpSel.addEventListener('change',()=>{state.interp=interpSel.value;});
+
+  const easings={
+    linear:t=>t,
+    ease:t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2,
+    elastic:t=>{const c=2*Math.PI/3;return t===0?0:t===1?1:-Math.pow(2,10*t-10)*Math.sin((t*10-10.75)*c);},
+    bounce:t=>{const n1=7.5625,d1=2.75;if(t<1/d1){return n1*t*t;}else if(t<2/d1){return n1*(t-=1.5/d1)*t+.75;}else if(t<2.5/d1){return n1*(t-=2.25/d1)*t+.9375;}return n1*(t-=2.625/d1)*t+.984375;},
+    overshoot:t=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2);},
+  };
+
+  // Geometry
+  const BOX_V=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
+  const BOX_E=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+  function makeSphere(res=8){const v=[];const e=[];for(let la=0;la<=res;la++){const phi=la/res*Math.PI;for(let lo=0;lo<res*2;lo++){const theta=lo/(res*2)*Math.PI*2;v.push([Math.sin(phi)*Math.cos(theta),Math.cos(phi),Math.sin(phi)*Math.sin(theta)]);}}for(let la=0;la<res;la++){for(let lo=0;lo<res*2;lo++){const a=la*res*2+lo,b=la*res*2+(lo+1)%(res*2),c=(la+1)*res*2+lo;e.push([a,b]);e.push([a,c]);}}return{v,e};}
+  const sphere=makeSphere(7);
+
+  function rot3(v,rx,ry){let[x,y,z]=v;let y2=y*Math.cos(rx)-z*Math.sin(rx),z2=y*Math.sin(rx)+z*Math.cos(rx);y=y2;z=z2;let x2=x*Math.cos(ry)+z*Math.sin(ry),z3=-x*Math.sin(ry)+z*Math.cos(ry);x=x2;z=z3;return[x,y,z];}
+  function proj3(x,y,z,s){const fov=600;const d=fov/(fov+z+3);return[x*d*s,y*d*s];}
+
+  const playBtn=document.getElementById('play-btn'),playIcon=document.getElementById('play-icon');
+  if(playBtn)playBtn.addEventListener('click',()=>{state.playing=!state.playing;playIcon.textContent=state.playing?'▶':'⏸';});
+
+  document.getElementById('btn-add-key')?.addEventListener('click',()=>{
+    keyframes.push({frame:Math.round(frame),rx:state.rx,ry:state.ry,sc:state.sc,py:state.py});
+    updateKFDisplay();
+    document.getElementById('status-dot').className='pr-dot';
+    document.getElementById('status-text').textContent=`Ключ добавлен на Frame ${Math.round(frame)} — всего ${keyframes.length} ключей`;
+  });
+  document.getElementById('btn-clear-keys')?.addEventListener('click',()=>{keyframes=[];updateKFDisplay();document.getElementById('status-text').textContent='Ключевые кадры очищены';});
+  document.getElementById('btn-reset-obj')?.addEventListener('click',()=>{state={...state,rx:0,ry:0,sc:1,py:0};['sl-rx','sl-ry','sl-sc','sl-py'].forEach(id=>{const sl=document.getElementById(id);if(sl)sl.value=id==='sl-sc'?10:0;});['val-rx','val-ry','val-py'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='0°'||'0';});document.getElementById('val-sc').textContent='1.0';document.getElementById('val-py').textContent='0';});
+  document.getElementById('export-btn')?.addEventListener('click',()=>{const json=JSON.stringify({animType:state.animType,interp:state.interp,speed:state.speed,keyframes,texture:TEXTURES[activeTex].id},null,2);const blob=new Blob([json],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='anim_settings.json';a.click();URL.revokeObjectURL(url);});
+
+  function updateKFDisplay(){
+    const list=document.getElementById('kf-list');
+    if(!list)return;
+    list.innerHTML=keyframes.map((k,i)=>`<div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04);">KF ${String(i+1).padStart(2,'0')} · Fr<b style="color:var(--gold2);">${k.frame}</b> · RX:${Math.round(k.rx)}° RY:${Math.round(k.ry)}°</div>`).join('');
+    const kfRot=document.getElementById('kf-rot');
+    const kfPos=document.getElementById('kf-pos');
+    const kfScl=document.getElementById('kf-scl');
+    [kfRot,kfPos,kfScl].forEach(el=>{if(el){el.innerHTML=keyframes.map(k=>`<div class="ed-kf" title="Frame ${k.frame}"></div>`).join('');}});
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+
+    // FPS counter
+    fpsCount++;const now=Date.now();
+    if(now-fpsLast>500){fpsDisplay=Math.round(fpsCount*1000/(now-fpsLast));fpsCount=0;fpsLast=now;}
+    const fpsEl=document.getElementById('fps-display');if(fpsEl)fpsEl.textContent=fpsDisplay+' FPS';
+
+    // Grid floor
+    ctx.save();ctx.strokeStyle='rgba(200,147,58,.05)';ctx.lineWidth=.5;
+    for(let gx=0;gx<W;gx+=40){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke();}
+    for(let gy=0;gy<H;gy+=40){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+    ctx.restore();
+
+    // Perspective floor grid
+    ctx.save();ctx.globalAlpha=.06;ctx.strokeStyle='#c8933a';ctx.lineWidth=.8;
+    const vanX=W/2,vanY=H*.65;
+    for(let xi=-8;xi<=8;xi++){ctx.beginPath();ctx.moveTo(vanX+xi*60,vanY);ctx.lineTo(vanX+xi*300,H);ctx.stroke();}
+    for(let yi=0;yi<=4;yi++){const prog=yi/4;const y=vanY+prog*(H-vanY);const xSpan=60+prog*240;ctx.beginPath();ctx.moveTo(vanX-xSpan,y);ctx.lineTo(vanX+xSpan,y);ctx.stroke();}
+    ctx.restore();
+
+    if(state.playing){t+=.016*state.speed;frame=(frame+state.speed)%totalFrames;}
+
+    const easeFn=easings[state.interp]||easings.ease;
+    let objRX=state.rx*Math.PI/180;
+    let objRY=state.ry*Math.PI/180;
+    let objSC=state.sc;let objPY=state.py;
+    let orbX=0,orbZ=0;
+
+    switch(state.animType){
+      case 'rotate':objRY+=t;break;
+      case 'bounce':{const b=Math.abs(Math.sin(t*1.5));objPY-=b*80*easeFn(b);objSC=1-b*.1;}break;
+      case 'pulse':objSC=state.sc*(1+Math.sin(t*2)*.28);break;
+      case 'swing':objRX+=Math.sin(t*1.2)*.45;break;
+      case 'orbit':objRY+=t*.5;objSC=state.sc+Math.sin(t)*.15;break;
+      case 'figure8':{const ft=t*.6;orbX=Math.sin(ft)*90;orbZ=Math.sin(ft*2)*40;objRY+=t*.4;}break;
+      case 'spiral':{const sp=t*.5%3;objPY-=sp*40;objSC=state.sc+sp*.1;objRY+=t;}break;
+      case 'wobble':{objRX+=Math.sin(t*4)*.3;objRY+=Math.cos(t*3.5)*.3;objSC=state.sc+Math.sin(t*5)*.08;}break;
+      case 'pendulum3d':{objRX+=Math.sin(t*.9)*.6;objRY+=Math.cos(t*1.1)*.4;}break;
+      case 'sinewave':{orbX=Math.sin(t*.8)*100;objPY-=Math.sin(t*.8*2)*40;objRY+=t*.3;}break;
+    }
+
+    const useAltShape=state.animType==='pulse'||state.animType==='orbit'||state.animType==='wobble'||state.animType==='pendulum3d';
+    const{v,e}=useAltShape?sphere:{v:BOX_V,e:BOX_E};
+    const s=Math.min(W,H)*.18*objSC;
+    const cx=W/2+orbX,cy=H/2-20-objPY;
+
+    const projected=v.map(vert=>{
+      const rv=rot3(vert,objRX,objRY);
+      const[px,py2]=proj3(rv[0],rv[1],rv[2],s);
+      return{px:cx+px,py:cy-py2,z:rv[2]};
+    });
+
+    // Draw texture sphere (behind wireframe)
+    const texDef=TEXTURES[activeTex];
+    if(texDef){
+      ctx.save();
+      // Clip to sphere-ish shape
+      const projRadius=s*.95;
+      ctx.beginPath();ctx.ellipse(cx,cy,projRadius,projRadius*.92,0,0,Math.PI*2);ctx.clip();
+      texDef.draw(ctx,cx,cy,projRadius,t);
+      ctx.restore();
+    }
+
+    // Orbital particles
+    if(state.animType==='orbit'){
+      for(let i=0;i<10;i++){
+        const a=t+i/10*Math.PI*2;const r=s*1.7;
+        const px2=cx+Math.cos(a)*r;const py2=cy+Math.sin(a)*r*.35;
+        ctx.beginPath();ctx.arc(px2,py2,2,0,Math.PI*2);
+        ctx.fillStyle='#e8b460';ctx.globalAlpha=.35+.3*Math.sin(a);ctx.fill();ctx.globalAlpha=1;
+      }
+    }
+    if(state.animType==='figure8'){
+      for(let i=0;i<8;i++){
+        const a=t+i/8*Math.PI*2;const pr=s*1.4;
+        const px2=cx+Math.sin(a)*pr;const py2=cy+Math.sin(a*2)*pr*.35;
+        ctx.beginPath();ctx.arc(px2,py2,1.5,0,Math.PI*2);
+        ctx.fillStyle='#c8933a';ctx.globalAlpha=.3+.2*Math.sin(a+t);ctx.fill();ctx.globalAlpha=1;
+      }
+    }
+
+    // Shadow
+    ctx.save();ctx.globalAlpha=.06;
+    e.forEach(([a,b])=>{
+      ctx.beginPath();ctx.moveTo(projected[a].px,H*.73+projected[a].z*2);ctx.lineTo(projected[b].px,H*.73+projected[b].z*2);
+      ctx.strokeStyle='#000';ctx.lineWidth=.5;ctx.stroke();
+    });
+    ctx.restore();
+
+    // Wireframe edges (on top of texture)
+    const sortedE=[...e].sort((a,b)=>{
+      const za=(projected[a[0]].z+projected[a[1]].z)/2;
+      const zb=(projected[b[0]].z+projected[b[1]].z)/2;
+      return zb-za;
+    });
+    sortedE.forEach(([a,b])=>{
+      const za=(projected[a].z+projected[b].z)/2;
+      const depth=Math.min(1,Math.max(0,(za+1.5)/3));
+      ctx.beginPath();ctx.moveTo(projected[a].px,projected[a].py);ctx.lineTo(projected[b].px,projected[b].py);
+      ctx.strokeStyle='rgba(255,255,255,0.6)';ctx.globalAlpha=.12+depth*.25;ctx.lineWidth=.9;ctx.stroke();
+      ctx.globalAlpha=1;
+    });
+    projected.forEach(({px,py:py2,z})=>{
+      const depth=Math.min(1,Math.max(0,(z+1.5)/3));
+      if(depth>.5){ctx.beginPath();ctx.arc(px,py2,1.5,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,0.7)';ctx.globalAlpha=depth*.6;ctx.fill();ctx.globalAlpha=1;}
+    });
+
+    // Timeline update
+    const pct=frame/totalFrames*100;
+    ['tl-rot-fill','tl-pos-fill','tl-scl-fill'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.width=pct+'%';});
+    ['tl-rot-head','tl-pos-head','tl-scl-head'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.left=pct+'%';});
+    const fc=document.getElementById('frame-cur');if(fc)fc.textContent=String(Math.round(frame)).padStart(3,'0');
+
+    drawCurve();
+    requestAnimationFrame(draw);
+  }
+
+  function drawCurve(){
+    const cw=curveCanvas.width,ch=curveCanvas.height;
+    cctx.clearRect(0,0,cw,ch);
+    // Grid
+    cctx.strokeStyle='rgba(200,147,58,.08)';cctx.lineWidth=.5;
+    for(let i=0;i<4;i++){cctx.beginPath();cctx.moveTo(0,i*ch/3);cctx.lineTo(cw,i*ch/3);cctx.stroke();}
+    const fn=easings[state.interp]||easings.ease;
+    cctx.beginPath();
+    for(let x=0;x<=cw;x++){
+      const t2=x/cw;const y=fn(Math.max(0,Math.min(1,t2)))*ch*.8+ch*.1;
+      if(x===0)cctx.moveTo(x,ch-y);else cctx.lineTo(x,ch-y);
+    }
+    cctx.strokeStyle='#c8933a';cctx.lineWidth=1.5;cctx.stroke();
+    const ph=(frame/totalFrames)*cw;
+    cctx.beginPath();cctx.moveTo(ph,0);cctx.lineTo(ph,ch);
+    cctx.strokeStyle='rgba(232,180,96,.5)';cctx.lineWidth=1;cctx.stroke();
+    const cv2=fn(Math.max(0,Math.min(1,frame/totalFrames)))*ch*.8+ch*.1;
+    cctx.beginPath();cctx.arc(ph,ch-cv2,3,0,Math.PI*2);
+    cctx.fillStyle='#e8b460';cctx.fill();
+  }
+
+  draw();
+})();
+</script>
+</body>
+</html>
